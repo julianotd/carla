@@ -47,6 +47,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+
+        // Brand tokens (Além da Pele)
+        ink: "hsl(var(--ink))",
+        gold: "hsl(var(--gold))",
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          foreground: "hsl(var(--surface-foreground))",
+        },
+
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -57,6 +66,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Arial", "sans-serif"],
+        display: ["Playfair Display", "ui-serif", "Georgia", "serif"],
+      },
+      boxShadow: {
+        soft: "0 12px 30px -18px hsl(var(--ink) / 0.35)",
+        glow: "0 14px 40px -24px hsl(var(--gold) / 0.55)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,10 +97,15 @@ export default {
             height: "0",
           },
         },
+        "float-y": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float-y": "float-y 7s ease-in-out infinite",
       },
     },
   },
