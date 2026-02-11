@@ -4,8 +4,7 @@ import { ArrowRight, HeartHandshake, MapPin, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-import { BRAND, INSTAGRAM_LINK, MAPS_LINK, SERVICES, TESTIMONIALS, WHATSAPP_LINK } from "./landingContent";
+import { useLandingData } from "@/hooks/useLandingData";
 
 function SectionHeader({
   eyebrow,
@@ -37,6 +36,7 @@ function Divider() {
 
 export function LandingPage() {
   const heroRef = useRef<HTMLDivElement | null>(null);
+  const { brand, links, services, testimonials, content } = useLandingData();
 
   const reducedMotion = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -69,25 +69,25 @@ export function LandingPage() {
               <div className="lg:col-span-7">
                 <p className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-2 text-xs font-medium text-foreground/80">
                   <Sparkles className="h-4 w-4 text-gold" />
-                  {BRAND.modality} • {BRAND.schedule}
+                  {brand.modality} • {brand.schedule}
                 </p>
 
                 <h1 className="mt-6 text-balance font-display text-4xl font-semibold leading-[1.06] text-ink sm:text-6xl">
                   Cuidado que vai além da pele.
                 </h1>
                 <p className="mt-4 text-balance text-lg leading-relaxed text-foreground/85 sm:text-xl">
-                  {BRAND.slogan}
+                  {brand.slogan}
                 </p>
-                <p className="mt-4 max-w-prose text-base leading-relaxed text-foreground/75">
-                  Um espaço premium, minimalista e acolhedor para você se reconectar com seu corpo, suas emoções e sua
-                  energia — com presença, respeito e acompanhamento.
-                </p>
+                 <p className="mt-4 max-w-prose text-base leading-relaxed text-foreground/75">
+                   {content.support_text ??
+                     "Um espaço premium, minimalista e acolhedor para você se reconectar com seu corpo, suas emoções e sua energia — com presença, respeito e acompanhamento."}
+                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Button asChild variant="premium" size="lg">
-                    <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                      Agendar pelo WhatsApp <ArrowRight className="ml-1" />
-                    </a>
+                     <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                       Agendar pelo WhatsApp <ArrowRight className="ml-1" />
+                     </a>
                   </Button>
                   <Button asChild variant="outline" size="lg">
                     <a href="#servicos">Ver serviços</a>
@@ -97,7 +97,7 @@ export function LandingPage() {
                 <div className="mt-8 flex flex-col gap-2 text-sm text-foreground/75 sm:flex-row sm:items-center sm:gap-6">
                   <span className="inline-flex items-center gap-2">
                     <HeartHandshake className="h-4 w-4 text-primary" />
-                    Terapeuta: <span className="font-medium text-ink">{BRAND.therapist}</span>
+                     Terapeuta: <span className="font-medium text-ink">{brand.therapist}</span>
                   </span>
                   <span className="inline-flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary" />
@@ -117,28 +117,28 @@ export function LandingPage() {
                   <CardContent className="grid gap-4">
                     <div className="rounded-xl bg-secondary p-4">
                       <p className="text-sm font-medium text-ink">Horário</p>
-                      <p className="mt-1 text-sm text-foreground/80">{BRAND.schedule}</p>
+                       <p className="mt-1 text-sm text-foreground/80">{brand.schedule}</p>
                     </div>
                     <div className="rounded-xl bg-secondary p-4">
                       <p className="text-sm font-medium text-ink">Contato</p>
-                      <p className="mt-1 text-sm text-foreground/80">WhatsApp: {BRAND.whatsappDisplay}</p>
-                      <p className="mt-1 text-sm text-foreground/80">Instagram: {BRAND.instagramHandle}</p>
+                       <p className="mt-1 text-sm text-foreground/80">WhatsApp: {brand.whatsappDisplay}</p>
+                       <p className="mt-1 text-sm text-foreground/80">Instagram: {brand.instagramHandle}</p>
                     </div>
                     <div className="rounded-xl bg-secondary p-4">
                       <p className="text-sm font-medium text-ink">Local</p>
-                      <p className="mt-1 text-sm text-foreground/80">{BRAND.address}</p>
+                       <p className="mt-1 text-sm text-foreground/80">{brand.address}</p>
                     </div>
                   </CardContent>
                   <CardFooter className="flex-col gap-3 sm:flex-row">
                     <Button asChild variant="hero" className="w-full sm:w-auto">
-                      <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                        Quero agendar
-                      </a>
+                       <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                         Quero agendar
+                       </a>
                     </Button>
                     <Button asChild variant="outline" className="w-full sm:w-auto">
-                      <a href={MAPS_LINK} target="_blank" rel="noreferrer">
-                        Como chegar
-                      </a>
+                       <a href={links.maps} target="_blank" rel="noreferrer">
+                         Como chegar
+                       </a>
                     </Button>
                   </CardFooter>
                 </Card>
@@ -153,10 +153,13 @@ export function LandingPage() {
         <section id="sobre" className="scroll-mt-24">
           <div className="container py-6 sm:py-10">
             <SectionHeader
-              eyebrow={BRAND.name}
-              title="Um convite ao seu bem-estar, com sutileza e profundidade"
-              description="A Além da Pele é uma clínica de terapias integrativas criada para quem busca reconexão e transformação com acolhimento. Aqui, cada sessão é construída com escuta, técnica e sensibilidade — sem pressa e sem excessos." 
-            />
+               eyebrow={brand.name}
+               title="Um convite ao seu bem-estar, com sutileza e profundidade"
+               description={
+                 content.about_text ??
+                 "A Além da Pele é uma clínica de terapias integrativas criada para quem busca reconexão e transformação com acolhimento. Aqui, cada sessão é construída com escuta, técnica e sensibilidade — sem pressa e sem excessos."
+               }
+             />
 
             <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-3">
               {[ 
@@ -196,17 +199,17 @@ export function LandingPage() {
             />
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {SERVICES.map((service) => (
-                <Card key={service.title} className="group rounded-2xl bg-background/70 shadow-soft transition-transform will-change-transform hover:-translate-y-0.5">
+               {services.map((service) => (
+                 <Card key={service.title} className="group rounded-2xl bg-background/70 shadow-soft transition-transform will-change-transform hover:-translate-y-0.5">
                   <CardHeader>
                     <CardTitle className="font-display text-xl text-ink">{service.title}</CardTitle>
                     <CardDescription className="text-foreground/75">{service.description}</CardDescription>
                   </CardHeader>
                   <CardFooter className="justify-between">
                     <Button asChild variant="hero" className="w-full">
-                      <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                        Quero agendar
-                      </a>
+                       <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                         Quero agendar
+                       </a>
                     </Button>
                   </CardFooter>
                 </Card>
@@ -258,10 +261,10 @@ export function LandingPage() {
 
             <div className="mt-10 text-center">
               <Button asChild variant="premium" size="lg">
-                <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                  Quero conversar e agendar
-                  <ArrowRight className="ml-1" />
-                </a>
+                 <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                   Quero conversar e agendar
+                   <ArrowRight className="ml-1" />
+                 </a>
               </Button>
             </div>
           </div>
@@ -279,8 +282,8 @@ export function LandingPage() {
             />
 
             <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-3">
-              {TESTIMONIALS.map((t, idx) => (
-                <Card key={idx} className="rounded-2xl bg-background/70 shadow-soft">
+               {testimonials.map((t, idx) => (
+                 <Card key={idx} className="rounded-2xl bg-background/70 shadow-soft">
                   <CardHeader>
                     <CardTitle className="font-display text-lg text-ink">{t.role}</CardTitle>
                     <CardDescription className="text-foreground/75">“{t.quote}”</CardDescription>
@@ -306,18 +309,18 @@ export function LandingPage() {
               <Card className="rounded-2xl bg-secondary/60 shadow-soft">
                 <CardHeader>
                   <CardTitle className="font-display text-2xl text-ink">Endereço</CardTitle>
-                  <CardDescription className="text-foreground/75">{BRAND.address}</CardDescription>
+                   <CardDescription className="text-foreground/75">{brand.address}</CardDescription>
                 </CardHeader>
                 <CardFooter className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                   <Button asChild variant="outline" className="w-full sm:w-auto">
-                    <a href={MAPS_LINK} target="_blank" rel="noreferrer">
-                      Como chegar
-                    </a>
+                     <a href={links.maps} target="_blank" rel="noreferrer">
+                       Como chegar
+                     </a>
                   </Button>
                   <Button asChild variant="hero" className="w-full sm:w-auto">
-                    <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                      Quero agendar
-                    </a>
+                     <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                       Quero agendar
+                     </a>
                   </Button>
                 </CardFooter>
               </Card>
@@ -337,21 +340,21 @@ export function LandingPage() {
                     Vamos agendar seu atendimento?
                   </h2>
                   <p className="mt-4 text-base leading-relaxed text-foreground/80">
-                    Envie uma mensagem no WhatsApp e a Carla te ajuda a encontrar o melhor horário. Sem formulários longos
-                    — direto, humano e acolhedor.
+                     {content.contact_intro ??
+                       "Envie uma mensagem no WhatsApp e a Carla te ajuda a encontrar o melhor horário. Sem formulários longos — direto, humano e acolhedor."}
                   </p>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                     <Button asChild variant="premium" size="lg" className="w-full sm:w-auto">
-                      <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                        Agendar agora
-                        <ArrowRight className="ml-1" />
-                      </a>
+                       <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                         Agendar agora
+                         <ArrowRight className="ml-1" />
+                       </a>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                      <a href={INSTAGRAM_LINK} target="_blank" rel="noreferrer">
-                        {BRAND.instagramHandle}
-                      </a>
+                       <a href={links.instagram} target="_blank" rel="noreferrer">
+                         {brand.instagramHandle}
+                       </a>
                     </Button>
                   </div>
                 </div>
@@ -368,11 +371,11 @@ export function LandingPage() {
                     <CardContent className="space-y-3">
                       <div className="rounded-xl bg-background/70 p-4">
                         <p className="text-xs font-semibold tracking-[0.18em] text-foreground/70">WHATSAPP</p>
-                        <p className="mt-2 text-sm font-medium text-ink">{BRAND.whatsappDisplay}</p>
+                         <p className="mt-2 text-sm font-medium text-ink">{brand.whatsappDisplay}</p>
                       </div>
                       <div className="rounded-xl bg-background/70 p-4">
                         <p className="text-xs font-semibold tracking-[0.18em] text-foreground/70">INSTAGRAM</p>
-                        <p className="mt-2 text-sm font-medium text-ink">{BRAND.instagramHandle}</p>
+                         <p className="mt-2 text-sm font-medium text-ink">{brand.instagramHandle}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -381,7 +384,7 @@ export function LandingPage() {
 
               <footer className="mt-10 border-t pt-6 text-center text-xs text-foreground/70">
                 <p>
-                  © {new Date().getFullYear()} {BRAND.name} • {BRAND.therapist} • Passo Fundo - RS
+                   © {new Date().getFullYear()} {brand.name} • {brand.therapist} • Passo Fundo - RS
                 </p>
               </footer>
             </div>
