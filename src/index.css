@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -153,6 +153,14 @@
       hsl(var(--gold) / 0.55),
       transparent
     );
+  }
+
+  .spiritual-fog {
+    background-image: url('https://images.unsplash.com/photo-1601662528567-526cd06f3582?q=80&w=2000&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    mix-blend-mode: screen;
+    pointer-events: none;
   }
 }
 

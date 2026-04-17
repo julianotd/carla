@@ -1,95 +1,139 @@
-import { useMemo, useState } from "react";
+
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Shield, ShieldAlert, Check } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-type RoleRow = { id: string; user_id: string; role: "admin" | "editor"; created_at: string };
-
-async function listMyRoles(): Promise<RoleRow[]> {
-  const { data, error } = await supabase.from("user_roles").select("id,user_id,role,created_at").order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as RoleRow[];
-}
+type UserRoleRow = {
+  id: string; // profile id
+  full_name: string | null;
+  email?: string; // Made optional as we might not get it from profiles join
+  avatar_url: string | null;
+  roles: { role: string }[];
+};
 
 export function RolesAdmin() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  // Note: due to RLS, users can only see their own roles. Admins can still INSERT/UPDATE/DELETE.
-  const { data, isLoading, error } = useQuery({ queryKey: ["admin", "roles"], queryFn: listMyRoles });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "roles"],
+    queryFn: async () => {
+      // Fetch profiles and their roles
+      // Note: Relation might be profiles -> user_roles
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          full_name,
+          avatar_url,
+          user_roles ( role )
+        `);
 
-  const [userId, setUserId] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const canGrant = useMemo(() => userId.trim().length > 10, [userId]);
-
-  const grantAdmin = async () => {
-    if (!canGrant) return;
-    setSaving(true);
-
-    const { error: insertError } = await supabase.from("user_roles").insert({
-      user_id: userId.trim(),
-      role: "admin",
-    });
-
-    setSaving(false);
-
-    if (insertError) {
-      toast({ variant: "destructive", title: "Erro ao adicionar admin", description: insertError.message });
-      return;
+      if (error) throw error;
+      return data?.map(p => ({
+        ...p,
+        roles: p.user_roles || []
+      })) as UserRoleRow[];
     }
+  });
 
-    toast({ title: "Admin adicionado", description: "A pessoa já pode acessar /admin após login." });
-    setUserId("");
-    await qc.invalidateQueries({ queryKey: ["admin", "roles"] });
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    // Current logic: simple 1 role per user for MVP, or add/remove
+    // For simplicity Phase 1: Overwrite or Add.
+    // Let's assume 1 role strategy or just adding 'admin' capability.
+
+    // Check if user has this role
+    // For this UI, let's just allow toggling "admin" status or setting a primary role.
+    // Let's implement: Select a role to ADD. To remove, we might need a list of tags.
+    // BETTER MVP: Dropdown to set the MAIN role.
+    // First, remove all roles, then insert new one? Or is it partial?
+    // Let's try upserting into user_roles.
+
+    try {
+      // Remove existing (optional, if we want single role enforcement)
+      await supabase.from("user_roles").delete().eq("user_id", userId);
+
+      if (newRole !== 'none') {
+        const { error } = await supabase.from("user_roles").insert({
+          user_id: userId,
+          role: newRole as any
+        });
+        if (error) throw error;
+      }
+
+      toast({ title: "Permissões atualizadas!" });
+      qc.invalidateQueries({ queryKey: ["admin", "roles"] });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Erro", description: err.message });
+    }
   };
 
   return (
-    <div className="grid gap-6">
-      <Card className="rounded-2xl border bg-background/70 shadow-soft">
-        <CardHeader>
-          <CardTitle className="font-display text-xl text-ink">Conceder acesso de admin</CardTitle>
-          <CardDescription className="text-foreground/75">
-            Cole o <span className="font-medium text-ink">User ID</span> da pessoa (UUID). Ela precisa criar conta e fazer login antes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="userId">User ID</Label>
-            <Input id="userId" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="ex: 8b8f0c0d-..." />
-          </div>
-          <div className="flex justify-end">
-            <Button variant="premium" disabled={!canGrant || saving} onClick={grantAdmin}>
-              {saving ? "Salvando..." : "Adicionar admin"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Usuários e Permissões</h2>
+        <p className="text-muted-foreground">Gerencie quem tem acesso ao painel.</p>
+      </div>
 
-      <Card className="rounded-2xl border bg-background/70 shadow-soft">
-        <CardHeader>
-          <CardTitle className="font-display text-xl text-ink">Minhas permissões</CardTitle>
-          <CardDescription className="text-foreground/75">Lista limitada ao seu usuário (por segurança).</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-2">
-          {isLoading && <p className="text-sm text-foreground/70">Carregando...</p>}
-          {error && <p className="text-sm text-destructive">Erro ao carregar.</p>}
-          {(data ?? []).map((r) => (
-            <div key={r.id} className="rounded-xl bg-secondary/40 p-3 text-sm">
-              <span className="font-medium text-ink">{r.role}</span>
-              <span className="ml-2 text-foreground/70">({r.user_id})</span>
-            </div>
-          ))}
-          {(data ?? []).length === 0 && !isLoading && (
-            <p className="text-sm text-foreground/70">Nenhuma role encontrada para seu usuário.</p>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid gap-4">
+        {isLoading && <p>Carregando...</p>}
+        {data?.map((user) => {
+          const currentRole = user.roles.length > 0 ? user.roles[0].role : "none";
+
+          return (
+            <Card key={user.id}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar>
+                    <AvatarImage src={user.avatar_url || ""} />
+                    <AvatarFallback>{user.full_name?.slice(0, 2).toUpperCase() || "U"}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-medium">{user.full_name || "Usuário sem nome"}</h3>
+                    <p className="text-xs text-muted-foreground">ID: {user.id}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    {user.roles.map(r => (
+                      <span key={r.role} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
+                        {r.role}
+                      </span>
+                    ))}
+                  </div>
+
+                  <Select value={currentRole} onValueChange={(val) => handleRoleChange(user.id, val)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Selecione função" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem acesso</SelectItem>
+                      <SelectItem value="receptionist">Recepcionista</SelectItem>
+                      <SelectItem value="therapist">Terapeuta</SelectItem>
+                      <SelectItem value="editor">Editor</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

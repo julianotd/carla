@@ -1,396 +1,446 @@
-import { useEffect, useMemo, useRef } from "react";
-import { ArrowRight, HeartHandshake, MapPin, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowRight,
+  HeartHandshake,
+  MapPin,
+  Sparkles,
+  Users,
+  Calendar,
+  Star,
+  Leaf,
+  Image as ImageIcon,
+  ChevronDown,
+  Instagram,
+  Facebook,
+  MessageCircle,
+} from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { useLandingData } from "@/hooks/useLandingData";
+import { PortalHero } from "./PortalHero";
 
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow?: string;
-  title: string;
-  description?: string;
-}) {
-  return (
-    <div className="mx-auto max-w-2xl text-center">
-      {eyebrow && (
-        <p className="text-xs font-semibold tracking-[0.18em] text-foreground/70">
-          {eyebrow}
-        </p>
-      )}
-      <h2 className="mt-3 font-display text-3xl font-semibold leading-tight text-ink sm:text-4xl">
-        {title}
-      </h2>
-      {description && <p className="mt-4 text-base leading-relaxed text-foreground/80">{description}</p>}
-    </div>
-  );
-}
+// --- Animations ---
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+};
 
-function Divider() {
-  return <div aria-hidden className="mx-auto my-12 h-px w-44 section-divider opacity-60 sm:my-16" />;
-}
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
 
 export function LandingPage() {
-  const heroRef = useRef<HTMLDivElement | null>(null);
-  const { brand, links, services, testimonials, content } = useLandingData();
-
-  const reducedMotion = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-  }, []);
-
-  useEffect(() => {
-    const el = heroRef.current;
-    if (!el || reducedMotion) return;
-
-    const handleMove = (ev: PointerEvent) => {
-      const rect = el.getBoundingClientRect();
-      const x = Math.min(Math.max(0, ev.clientX - rect.left), rect.width);
-      const y = Math.min(Math.max(0, ev.clientY - rect.top), rect.height);
-      el.style.setProperty("--mx", `${(x / rect.width) * 100}%`);
-      el.style.setProperty("--my", `${(y / rect.height) * 100}%`);
-    };
-
-    el.addEventListener("pointermove", handleMove);
-    return () => el.removeEventListener("pointermove", handleMove);
-  }, [reducedMotion]);
+  const {
+    brand,
+    links,
+    services,
+    testimonials,
+    content,
+    professionals,
+    events,
+    processSteps,
+    faqs,
+  } = useLandingData();
 
   return (
-    <div id="topo" className="min-h-screen">
-      <main className="pt-16">
-        {/* HERO */}
-        <section ref={heroRef} className="hero-field relative overflow-hidden">
-          <div className="container py-14 sm:py-20">
-            <div className="grid items-center gap-10 lg:grid-cols-12">
-              <div className="lg:col-span-7">
-                <p className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-2 text-xs font-medium text-foreground/80">
-                  <Sparkles className="h-4 w-4 text-gold" />
-                  {brand.modality} • {brand.schedule}
-                </p>
+    <div id="topo" className="min-h-screen bg-mystic-black text-[#EAE6DF] scroll-smooth font-sans selection:bg-energy-gold/30">
+      <main>
+        {/* 1. HERO SECTION (PORTAL) */}
+        <PortalHero />
 
-                <h1 className="mt-6 text-balance font-display text-4xl font-semibold leading-[1.06] text-ink sm:text-6xl">
-                  Cuidado que vai além da pele.
-                </h1>
-                <p className="mt-4 text-balance text-lg leading-relaxed text-foreground/85 sm:text-xl">
-                  {brand.slogan}
-                </p>
-                 <p className="mt-4 max-w-prose text-base leading-relaxed text-foreground/75">
-                   {content.support_text ??
-                     "Um espaço premium, minimalista e acolhedor para você se reconectar com seu corpo, suas emoções e sua energia — com presença, respeito e acompanhamento."}
-                 </p>
+        {/* 2. O QUE É ESSE ESPAÇO? */}
+        <section id="conceito" className="relative py-24 sm:py-32 overflow-hidden bg-gradient-to-b from-mystic-black to-mystic-deep">
+          {/* Subtle overlay texture */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+          
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeInUp}
+            className="container relative z-10 max-w-[900px] text-center px-6"
+          >
+            {/* Organic Line Form */}
+            <div className="w-full flex justify-center mb-8">
+              <svg width="60" height="20" viewBox="0 0 60 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 10 C 15 20, 45 0, 60 10" stroke="rgba(200, 169, 106, 0.4)" strokeWidth="1.5" fill="none" />
+              </svg>
+            </div>
+            
+            <h2 className="font-display text-2xl sm:text-4xl text-energy-gold font-light italic mb-8 leading-relaxed">
+              Este não é apenas um espaço terapêutico.
+            </h2>
+            <p className="text-xl sm:text-2xl leading-relaxed text-[#EAE6DF]/90 font-light max-w-2xl mx-auto">
+              É um campo onde processos se revelam, <br className="hidden sm:block" />
+              emoções ganham voz <br className="hidden sm:block" />
+              e a energia encontra caminho.
+            </p>
+          </motion.div>
+        </section>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <Button asChild variant="premium" size="lg">
-                     <a href={links.whatsapp} target="_blank" rel="noreferrer">
-                       Agendar pelo WhatsApp <ArrowRight className="ml-1" />
-                     </a>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <a href="#servicos">Ver serviços</a>
-                  </Button>
-                </div>
+        {/* 3. COMO VOCÊ PODE SER ATENDIDO (EXPERIENCES GRID) */}
+        <section id="servicos" className="py-24 bg-mystic-deep relative">
+          <div className="container relative z-10 max-w-6xl">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="mb-16 text-center"
+            >
+              <motion.h2 variants={fadeInUp} className="font-display text-4xl text-[#EAE6DF] mb-4">
+                Como você pode ser atendido
+              </motion.h2>
+              <motion.p variants={fadeInUp} className="text-[#EAE6DF]/60 text-lg">
+                Selecione o acesso que mais ressoa com o seu momento.
+              </motion.p>
+            </motion.div>
 
-                <div className="mt-8 flex flex-col gap-2 text-sm text-foreground/75 sm:flex-row sm:items-center sm:gap-6">
-                  <span className="inline-flex items-center gap-2">
-                    <HeartHandshake className="h-4 w-4 text-primary" />
-                     Terapeuta: <span className="font-medium text-ink">{brand.therapist}</span>
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {services.map((service: any, idx) => (
+                <motion.div key={idx} variants={fadeInUp}>
+                  <div className="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_-20px_rgba(200,169,106,0.3)] hover:border-energy-gold/30 h-full flex flex-col justify-between cursor-pointer">
+                    
+                    <div className="absolute inset-0 bg-gradient-to-t from-mystic-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+                    
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start mb-6">
+                        <h3 className="font-display text-2xl font-normal group-hover:text-energy-gold transition-colors">
+                          {service.title}
+                        </h3>
+                      </div>
+                      <p className="text-[#EAE6DF]/70 mb-8 font-light leading-relaxed">
+                        {service.description}
+                      </p>
+                    </div>
+
+                    <div className="relative z-10 mt-auto pt-4 border-t border-white/10">
+                      <p className="text-sm font-medium text-energy-gold/90 h-10 flex items-center transition-all duration-300 transform translate-y-2 opacity-60 group-hover:translate-y-0 group-hover:opacity-100 italic">
+                        {service.hoverText || "Agende uma sessão."}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* 4. COMO FUNCIONA O PROCESSO (TIMELINE) */}
+        <section className="py-24 sm:py-32 bg-gradient-to-b from-mystic-deep to-mystic-black relative overflow-hidden">
+          {/* Subtle background glow */}
+          <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-energy-gold/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
+          
+          <div className="container max-w-4xl relative z-10">
+             <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              className="text-center mb-16"
+            >
+              <h2 className="font-display text-4xl text-[#EAE6DF] mb-4">
+                A jornada do seu processo
+              </h2>
+            </motion.div>
+
+            <div className="relative border-l border-energy-gold/30 ml-4 sm:ml-8 pl-8 sm:pl-12 space-y-16 py-4">
+              {processSteps?.map((step: any, idx: number) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-10%" }}
+                  transition={{ duration: 0.8, delay: idx * 0.2 }}
+                  className="relative group"
+                >
+                  <div className="absolute -left-[45px] sm:-left-[61px] top-1.5 w-4 h-4 rounded-full bg-mystic-black border-[3px] border-energy-gold/50 group-hover:scale-125 group-hover:border-energy-gold transition-all duration-300 shadow-[0_0_10px_rgba(200,169,106,0)] group-hover:shadow-[0_0_15px_rgba(200,169,106,0.6)]" />
+                  
+                  <span className="text-energy-gold text-xs font-semibold tracking-[0.2em] uppercase mb-2 block">
+                    {step.phase}
                   </span>
-                  <span className="inline-flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    Passo Fundo - RS
-                  </span>
-                </div>
+                  <h3 className="font-display text-3xl mb-3">{step.title}</h3>
+                  <p className="text-[#EAE6DF]/70 text-lg font-light leading-relaxed">
+                    {step.description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 5. QUEM CONDUZ (THERAPIST) */}
+        <section id="profissionais" className="py-24 bg-mystic-black relative">
+          <div className="container max-w-5xl">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="text-center mb-16"
+            >
+              <motion.h2 variants={fadeInUp} className="font-display text-4xl mb-4">
+                Quem conduz o campo
+              </motion.h2>
+              <motion.p variants={fadeInUp} className="text-[#EAE6DF]/60 text-lg mb-12">
+                Cada atendimento é conduzido com escuta, presença e respeito ao seu momento.
+              </motion.p>
+              
+              <div className="grid md:grid-cols-2 gap-8 mt-8">
+                {professionals?.map((pro: any) => (
+                  <motion.div key={pro.id} variants={fadeInUp} className="relative group rounded-3xl overflow-hidden bg-white/5 border border-white/10 aspect-square sm:aspect-auto sm:h-[450px]">
+                    {/* Fake Background Image overlay since real is not available */}
+                    <div className="absolute inset-0 bg-mystic-deep/50 mix-blend-multiply z-10 transition-all duration-700 group-hover:bg-mystic-deep/40" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-30 filter grayscale blur-[2px] transition-all duration-700 group-hover:scale-105 group-hover:blur-none group-hover:grayscale-0 group-hover:opacity-70 z-0">
+                      {pro.image ? (
+                        <img src={pro.image} alt={pro.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-48 h-48" />
+                      )}
+                    </div>
+                    
+                    <div className="absolute inset-0 z-20 p-8 flex flex-col justify-end text-left h-full">
+                      <div className="transform transition-transform duration-500 translate-y-8 group-hover:translate-y-0">
+                        <h3 className="font-display text-3xl font-medium text-energy-gold mb-1">{pro.name}</h3>
+                        <p className="text-white/80 font-light mb-4 text-sm">{pro.role}</p>
+                        
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 space-y-4">
+                          <p className="text-[#EAE6DF]/90 text-sm leading-relaxed border-l-2 border-energy-gold/50 pl-4 italic">
+                            "Acredito que a verdadeira cura acontece quando criamos um espaço seguro o suficiente para o seu corpo aceitar soltar."
+                          </p>
+                          <div className="pt-2">
+                             <Button asChild size="sm" className="bg-transparent border border-energy-gold text-energy-gold hover:bg-energy-gold hover:text-mystic-black rounded-full h-9">
+                              <a href={links.whatsapp} target="_blank" rel="noreferrer">Agendar com {pro.name.split(' ')[0]}</a>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
+            </motion.div>
+          </div>
+        </section>
 
-              <div className="lg:col-span-5">
-                <Card className="rounded-2xl border bg-background/70 shadow-soft">
-                  <CardHeader>
-                    <CardTitle className="font-display text-2xl text-ink">Atendimento</CardTitle>
-                    <CardDescription className="text-foreground/75">
-                      Uma experiência com calma, presença e orientação — do primeiro contato ao acompanhamento.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-4">
-                    <div className="rounded-xl bg-secondary p-4">
-                      <p className="text-sm font-medium text-ink">Horário</p>
-                       <p className="mt-1 text-sm text-foreground/80">{brand.schedule}</p>
+        {/* 6. DEPOIMENTOS (PROVA EMOCIONAL) */}
+        <section className="py-32 bg-mystic-deep relative overflow-hidden">
+          {/* subtle particles */}
+           <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+             <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-white rounded-full shadow-[0_0_10px_2px_#fff]" />
+             <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-white rounded-full shadow-[0_0_10px_2px_#fff]" />
+             <div className="absolute bottom-1/4 left-2/3 w-1.5 h-1.5 bg-energy-gold rounded-full shadow-[0_0_15px_3px_#C8A96A]" />
+           </div>
+
+          <div className="container max-w-6xl relative z-10">
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid gap-8 md:grid-cols-3"
+            >
+              {testimonials.map((t, idx) => (
+                <motion.div key={idx} variants={fadeInUp}>
+                  <div className="h-full bg-mystic-black/50 backdrop-blur-lg border border-white/5 rounded-3xl p-10 hover:border-energy-gold/20 transition-all duration-300">
+                    <div className="flex gap-1 mb-6">
+                      {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 text-energy-gold fill-energy-gold" />)}
                     </div>
-                    <div className="rounded-xl bg-secondary p-4">
-                      <p className="text-sm font-medium text-ink">Contato</p>
-                       <p className="mt-1 text-sm text-foreground/80">WhatsApp: {brand.whatsappDisplay}</p>
-                       <p className="mt-1 text-sm text-foreground/80">Instagram: {brand.instagramHandle}</p>
+                    <p className="text-lg text-[#EAE6DF]/90 font-display font-light leading-relaxed italic mb-8">
+                      "{t.quote}"
+                    </p>
+                    <p className="text-xs font-semibold tracking-widest text-[#EAE6DF]/40 uppercase mt-auto">
+                      {t.role}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* 7. EXPERIÊNCIAS / EVENTOS */}
+        <section id="eventos" className="py-24 bg-mystic-black">
+          <div className="container max-w-5xl">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              className="mb-12"
+            >
+              <h2 className="font-display text-4xl">Comunidade & Rodas</h2>
+            </motion.div>
+
+            {events && events.length > 0 ? (
+              <div className="space-y-6">
+                {events.map((evt: any) => (
+                  <motion.div 
+                    key={evt.id} 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="group flex flex-col md:flex-row items-center gap-6 bg-white/5 border border-white/5 rounded-2xl p-6 hover:border-energy-gold/30 transition-all"
+                  >
+                    <div className="w-full md:w-48 text-center md:text-left md:border-r border-white/10 shrink-0 pr-6">
+                       <span className="text-sm font-semibold tracking-widest text-energy-gold uppercase mb-1 block">
+                        Agenda
+                      </span>
+                      <p className="text-xl font-display text-[#EAE6DF]">{evt.date}</p>
                     </div>
-                    <div className="rounded-xl bg-secondary p-4">
-                      <p className="text-sm font-medium text-ink">Local</p>
-                       <p className="mt-1 text-sm text-foreground/80">{brand.address}</p>
+                    
+                    <div className="flex-1 text-center md:text-left">
+                      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2 justify-center md:justify-start">
+                        <h3 className="font-display text-2xl group-hover:text-energy-gold transition-colors">{evt.title}</h3>
+                        <Badge className="bg-energy-gold/20 text-energy-gold border-none font-normal text-xs uppercase tracking-wider w-fit mx-auto md:mx-0">
+                          Vivência ativa
+                        </Badge>
+                      </div>
+                      <p className="text-[#EAE6DF]/60 text-sm">Facilitador(a): {evt.facilitator}</p>
                     </div>
-                  </CardContent>
-                  <CardFooter className="flex-col gap-3 sm:flex-row">
-                    <Button asChild variant="hero" className="w-full sm:w-auto">
-                       <a href={links.whatsapp} target="_blank" rel="noreferrer">
-                         Quero agendar
-                       </a>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full sm:w-auto">
-                       <a href={links.maps} target="_blank" rel="noreferrer">
-                         Como chegar
-                       </a>
-                    </Button>
-                  </CardFooter>
-                </Card>
+
+                    <div className="shrink-0 mt-4 md:mt-0">
+                      <Button asChild variant="outline" className="border-energy-gold text-energy-gold hover:bg-energy-gold hover:text-mystic-black rounded-full w-full md:w-auto">
+                         <a href={links.whatsapp} target="_blank" rel="noreferrer">Garantir vaga</a>
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="py-12 border border-white/5 rounded-2xl text-center bg-white/5">
+                <p className="text-[#EAE6DF]/50 italic">Nenhum evento em comunidade aberto no momento.</p>
+              </div>
+            )}
           </div>
         </section>
 
-        <Divider />
+        {/* 8. QUEBRA DE OBJEÇÃO (FAQ) */}
+        <section className="py-24 bg-gradient-to-b from-mystic-black to-mystic-deep">
+          <div className="container max-w-3xl">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              className="mb-12 text-center"
+            >
+              <h2 className="font-display text-4xl mb-4">Ainda sente dúvida?</h2>
+            </motion.div>
 
-        {/* SOBRE */}
-        <section id="sobre" className="scroll-mt-24">
-          <div className="container py-6 sm:py-10">
-            <SectionHeader
-               eyebrow={brand.name}
-               title="Um convite ao seu bem-estar, com sutileza e profundidade"
-               description={
-                 content.about_text ??
-                 "A Além da Pele é uma clínica de terapias integrativas criada para quem busca reconexão e transformação com acolhimento. Aqui, cada sessão é construída com escuta, técnica e sensibilidade — sem pressa e sem excessos."
-               }
-             />
-
-            <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-3">
-              {[ 
-                {
-                  title: "Acolhimento real",
-                  text: "Um espaço seguro para você ser escutado(a) com presença e respeito.",
-                },
-                {
-                  title: "Cuidado personalizado",
-                  text: "Cada atendimento é guiado pelo seu momento — com técnica e intuição na medida.",
-                },
-                {
-                  title: "Integração no dia a dia",
-                  text: "Orientações simples e acompanhamento para sustentar resultados com leveza.",
-                },
-              ].map((item) => (
-                <Card key={item.title} className="rounded-2xl bg-secondary/60 shadow-soft">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="font-display text-xl text-ink">{item.title}</CardTitle>
-                    <CardDescription className="text-foreground/75">{item.text}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
+              <Accordion type="single" collapsible className="w-full space-y-4">
+                {faqs?.map((faq: any, i: number) => (
+                  <AccordionItem key={i} value={`faq-${i}`} className="border border-white/5 bg-white/5 rounded-xl px-6 data-[state=open]:border-energy-gold/30 transition-colors">
+                    <AccordionTrigger className="text-left font-display text-xl text-[#EAE6DF] hover:no-underline hover:text-energy-gold py-6">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-[#EAE6DF]/70 text-base font-light leading-relaxed pb-6">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </motion.div>
           </div>
         </section>
 
-        <Divider />
-
-        {/* SERVIÇOS */}
-        <section id="servicos" className="scroll-mt-24">
-          <div className="container py-6 sm:py-10">
-            <SectionHeader
-              eyebrow="Serviços"
-              title="Terapias integrativas para apoiar sua transformação"
-              description="Escolha o que mais ressoa com você — ou converse com a Carla para uma indicação alinhada ao seu momento." 
-            />
-
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-               {services.map((service) => (
-                 <Card key={service.title} className="group rounded-2xl bg-background/70 shadow-soft transition-transform will-change-transform hover:-translate-y-0.5">
-                  <CardHeader>
-                    <CardTitle className="font-display text-xl text-ink">{service.title}</CardTitle>
-                    <CardDescription className="text-foreground/75">{service.description}</CardDescription>
-                  </CardHeader>
-                  <CardFooter className="justify-between">
-                    <Button asChild variant="hero" className="w-full">
-                       <a href={links.whatsapp} target="_blank" rel="noreferrer">
-                         Quero agendar
-                       </a>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <Divider />
-
-        {/* COMO FUNCIONA */}
-        <section id="como-funciona" className="scroll-mt-24">
-          <div className="container py-6 sm:py-10">
-            <SectionHeader
-              eyebrow="Como funciona"
-              title="Um processo em três passos"
-              description="Clareza e cuidado em cada etapa — para que você se sinta amparado(a) e confiante." 
-            />
-
-            <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-3">
-              {[
-                {
-                  step: "1",
-                  title: "Acolhimento",
-                  text: "Entendemos suas necessidades, sua história e seu objetivo para a sessão.",
-                },
-                {
-                  step: "2",
-                  title: "Investigação e cuidado",
-                  text: "Aplicamos as técnicas integrativas adequadas com orientação clara e conforto.",
-                },
-                {
-                  step: "3",
-                  title: "Integração e acompanhamento",
-                  text: "Você sai com direcionamentos e, se fizer sentido, seguimos com acompanhamento.",
-                },
-              ].map((item) => (
-                <Card key={item.step} className="rounded-2xl bg-secondary/60 shadow-soft">
-                  <CardHeader>
-                    <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background text-sm font-semibold text-ink shadow-soft">
-                      {item.step}
-                    </div>
-                    <CardTitle className="font-display text-xl text-ink">{item.title}</CardTitle>
-                    <CardDescription className="text-foreground/75">{item.text}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-
-            <div className="mt-10 text-center">
-              <Button asChild variant="premium" size="lg">
-                 <a href={links.whatsapp} target="_blank" rel="noreferrer">
-                   Quero conversar e agendar
-                   <ArrowRight className="ml-1" />
-                 </a>
+        {/* 9. CHAMADA FINAL (CONVERSÃO) */}
+        <section className="py-32 relative overflow-hidden bg-mystic-black">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-energy-gold/10 via-mystic-black to-mystic-black opacity-60" />
+          
+          <div className="container relative z-10 max-w-4xl text-center drop-shadow-[0_0_30px_rgba(200,169,106,0.15)]">
+            <h2 className="font-display text-4xl sm:text-5xl font-normal text-energy-gold leading-tight mb-8">
+              Se algo em você chegou até aqui,<br className="hidden sm:block" />
+              talvez já seja o momento de olhar para isso.
+            </h2>
+            
+            <div className="mt-12">
+               <Button asChild size="lg" className="bg-energy-gold text-mystic-black hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(200,169,106,0.6)] border-none rounded-full px-12 h-14 text-lg font-sans transition-all duration-300">
+                <a href={links.whatsapp} target="_blank" rel="noreferrer">
+                  Agendar meu momento
+                </a>
               </Button>
             </div>
           </div>
         </section>
-
-        <Divider />
-
-        {/* DEPOIMENTOS */}
-        <section aria-label="Depoimentos" className="scroll-mt-24">
-          <div className="container py-6 sm:py-10">
-            <SectionHeader
-              eyebrow="Depoimentos"
-              title="Relatos de quem viveu a experiência"
-              description="Depoimentos curtos e reais — preservando a privacidade." 
-            />
-
-            <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-3">
-               {testimonials.map((t, idx) => (
-                 <Card key={idx} className="rounded-2xl bg-background/70 shadow-soft">
-                  <CardHeader>
-                    <CardTitle className="font-display text-lg text-ink">{t.role}</CardTitle>
-                    <CardDescription className="text-foreground/75">“{t.quote}”</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <Divider />
-
-        {/* LOCAL */}
-        <section id="local" className="scroll-mt-24">
-          <div className="container py-6 sm:py-10">
-            <SectionHeader
-              eyebrow="Local"
-              title="Passo Fundo - RS"
-              description="Atendimento presencial em um ambiente calmo e acolhedor — e também online." 
-            />
-
-            <div className="mx-auto mt-10 max-w-4xl">
-              <Card className="rounded-2xl bg-secondary/60 shadow-soft">
-                <CardHeader>
-                  <CardTitle className="font-display text-2xl text-ink">Endereço</CardTitle>
-                   <CardDescription className="text-foreground/75">{brand.address}</CardDescription>
-                </CardHeader>
-                <CardFooter className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-                  <Button asChild variant="outline" className="w-full sm:w-auto">
-                     <a href={links.maps} target="_blank" rel="noreferrer">
-                       Como chegar
-                     </a>
-                  </Button>
-                  <Button asChild variant="hero" className="w-full sm:w-auto">
-                     <a href={links.whatsapp} target="_blank" rel="noreferrer">
-                       Quero agendar
-                     </a>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        <Divider />
-
-        {/* CONTATO */}
-        <section id="contato" className="scroll-mt-24">
-          <div className="container py-10 sm:py-14">
-            <div className="mx-auto max-w-5xl rounded-3xl border bg-background/70 p-6 shadow-soft sm:p-10">
-              <div className="grid items-center gap-8 lg:grid-cols-12">
-                <div className="lg:col-span-7">
-                  <h2 className="text-balance font-display text-3xl font-semibold text-ink sm:text-4xl">
-                    Vamos agendar seu atendimento?
-                  </h2>
-                  <p className="mt-4 text-base leading-relaxed text-foreground/80">
-                     {content.contact_intro ??
-                       "Envie uma mensagem no WhatsApp e a Carla te ajuda a encontrar o melhor horário. Sem formulários longos — direto, humano e acolhedor."}
-                  </p>
-
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <Button asChild variant="premium" size="lg" className="w-full sm:w-auto">
-                       <a href={links.whatsapp} target="_blank" rel="noreferrer">
-                         Agendar agora
-                         <ArrowRight className="ml-1" />
-                       </a>
-                    </Button>
-                    <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                       <a href={links.instagram} target="_blank" rel="noreferrer">
-                         {brand.instagramHandle}
-                       </a>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-5">
-                  <Card className={cn("rounded-2xl bg-secondary/60 shadow-soft")}
-                  >
-                    <CardHeader>
-                      <CardTitle className="font-display text-xl text-ink">Contato</CardTitle>
-                      <CardDescription className="text-foreground/75">
-                        Resposta de segunda a sexta, conforme disponibilidade.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="rounded-xl bg-background/70 p-4">
-                        <p className="text-xs font-semibold tracking-[0.18em] text-foreground/70">WHATSAPP</p>
-                         <p className="mt-2 text-sm font-medium text-ink">{brand.whatsappDisplay}</p>
-                      </div>
-                      <div className="rounded-xl bg-background/70 p-4">
-                        <p className="text-xs font-semibold tracking-[0.18em] text-foreground/70">INSTAGRAM</p>
-                         <p className="mt-2 text-sm font-medium text-ink">{brand.instagramHandle}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              <footer className="mt-10 border-t pt-6 text-center text-xs text-foreground/70">
-                <p>
-                   © {new Date().getFullYear()} {brand.name} • {brand.therapist} • Passo Fundo - RS
-                </p>
-              </footer>
-            </div>
-          </div>
-        </section>
       </main>
+
+      {/* 10. RODAPÉ */}
+      <footer className="bg-mystic-black border-t border-white/5 pt-16 pb-8">
+        <div className="container max-w-6xl">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16">
+            <div className="max-w-sm">
+              <div className="flex items-center gap-2 mb-6">
+                <Sparkles className="w-5 h-5 text-energy-gold" />
+                <span className="font-display text-2xl text-[#EAE6DF]">{brand.name}</span>
+              </div>
+              <p className="text-[#EAE6DF]/50 font-light text-sm">
+                {brand.address}
+              </p>
+            </div>
+            
+            <div className="flex gap-12">
+               <div>
+                 <h4 className="font-medium text-[#EAE6DF] mb-4 text-sm font-sans tracking-wide uppercase">Contato</h4>
+                 <ul className="space-y-3">
+                   <li>
+                     <a href={links.whatsapp} target="_blank" rel="noreferrer" className="text-[#EAE6DF]/60 hover:text-energy-gold text-sm flex items-center gap-2 transition-colors">
+                       <MessageCircle className="w-4 h-4" /> {brand.whatsappDisplay}
+                     </a>
+                   </li>
+                 </ul>
+               </div>
+               <div>
+                 <h4 className="font-medium text-[#EAE6DF] mb-4 text-sm font-sans tracking-wide uppercase">Social</h4>
+                 <ul className="space-y-3">
+                   <li>
+                     <a href={links.instagram} target="_blank" rel="noreferrer" className="text-[#EAE6DF]/60 hover:text-energy-gold text-sm flex items-center gap-2 transition-colors">
+                       <Instagram className="w-4 h-4" /> Instagram
+                     </a>
+                   </li>
+                 </ul>
+               </div>
+            </div>
+          </div>
+          
+          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+             <p className="text-[#EAE6DF]/40 text-xs">
+               &copy; {new Date().getFullYear()} {brand.name}. Todos os direitos reservados.
+             </p>
+             <p className="font-display italic text-[#EAE6DF]/60 text-lg">
+               Cada processo começa com um passo.
+             </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

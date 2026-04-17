@@ -1,159 +1,164 @@
-import { useMemo, useState } from "react";
+
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Pencil, Trash2, Quote, Star } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-
-type TestimonialRow = {
-  id: string;
-  role_label: string;
-  quote: string;
-  sort_order: number;
-  is_active: boolean;
-};
-
-async function listTestimonials(): Promise<TestimonialRow[]> {
-  const { data, error } = await supabase
-    .from("testimonials")
-    .select("id,role_label,quote,sort_order,is_active")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as TestimonialRow[];
-}
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export function TestimonialsAdmin() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useQuery({ queryKey: ["admin", "testimonials"], queryFn: listTestimonials });
+  const { data } = useQuery({
+    queryKey: ["admin", "testimonials"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("testimonials").select("*").order("sort_order");
+      if (error) throw error;
+      return data as any[];
+    }
+  });
 
-  const [roleLabel, setRoleLabel] = useState("Cliente");
+  const [clientName, setClientName] = useState("");
+  const [roleLabel, setRoleLabel] = useState("");
   const [quote, setQuote] = useState("");
+  const [rating, setRating] = useState(5);
+  const [photoUrl, setPhotoUrl] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const canAdd = useMemo(() => quote.trim().length > 0, [quote]);
-
-  const addRow = async () => {
-    if (!canAdd) return;
-    setSaving(true);
-
-    const { error: insertError } = await supabase.from("testimonials").insert({
-      role_label: roleLabel.trim() || "Cliente",
-      quote: quote.trim(),
-      sort_order: sortOrder,
-      is_active: isActive,
-    });
-
-    setSaving(false);
-
-    if (insertError) {
-      toast({ variant: "destructive", title: "Erro ao salvar", description: insertError.message });
-      return;
-    }
-
+  const resetForm = () => {
+    setEditingId(null);
+    setClientName("");
+    setRoleLabel("");
     setQuote("");
+    setRating(5);
+    setPhotoUrl("");
     setSortOrder(0);
     setIsActive(true);
-    await qc.invalidateQueries({ queryKey: ["admin", "testimonials"] });
+  }
+
+  const handleEdit = (t: any) => {
+    setEditingId(t.id);
+    setClientName(t.client_name || "");
+    setRoleLabel(t.role_label || "");
+    setQuote(t.quote);
+    setRating(t.rating || 5);
+    setPhotoUrl(t.photo_url || "");
+    setSortOrder(t.sort_order || 0);
+    setIsActive(t.is_active);
+    setIsDialogOpen(true);
   };
 
-  const toggleActive = async (id: string, next: boolean) => {
-    const { error: updateError } = await supabase.from("testimonials").update({ is_active: next }).eq("id", id);
-    if (updateError) {
-      toast({ variant: "destructive", title: "Erro", description: updateError.message });
-      return;
+  const handleSave = async () => {
+    if (!quote) return;
+    setSaving(true);
+
+    const payload = {
+      client_name: clientName,
+      role_label: roleLabel,
+      quote,
+      rating,
+      photo_url: photoUrl,
+      sort_order: sortOrder,
+      is_active: isActive
+    };
+
+    let error;
+    if (editingId) {
+      const res = await supabase.from("testimonials").update(payload).eq("id", editingId);
+      error = res.error;
+    } else {
+      const res = await supabase.from("testimonials").insert(payload);
+      error = res.error;
     }
-    await qc.invalidateQueries({ queryKey: ["admin", "testimonials"] });
+    setSaving(false);
+
+    if (error) {
+      toast({ variant: "destructive", title: "Erro", description: error.message });
+    } else {
+      setIsDialogOpen(false);
+      resetForm();
+      qc.invalidateQueries({ queryKey: ["admin", "testimonials"] });
+      toast({ title: "Salvo!" });
+    }
   };
 
-  const removeRow = async (id: string) => {
-    const ok = window.confirm("Remover este depoimento?");
-    if (!ok) return;
-    const { error: delError } = await supabase.from("testimonials").delete().eq("id", id);
-    if (delError) {
-      toast({ variant: "destructive", title: "Erro", description: delError.message });
-      return;
-    }
-    await qc.invalidateQueries({ queryKey: ["admin", "testimonials"] });
+  const removeTestimonial = async (id: string) => {
+    if (!confirm("Remover depoimento?")) return;
+    const { error } = await supabase.from("testimonials").delete().eq("id", id);
+    if (error) toast({ variant: "destructive", description: error.message });
+    else qc.invalidateQueries({ queryKey: ["admin", "testimonials"] });
   };
 
   return (
-    <div className="grid gap-6">
-      <Card className="rounded-2xl border bg-background/70 shadow-soft">
-        <CardHeader>
-          <CardTitle className="font-display text-xl text-ink">Novo depoimento</CardTitle>
-          <CardDescription className="text-foreground/75">Aparece na seção Depoimentos da landing.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="t-role">Rótulo</Label>
-              <Input id="t-role" value={roleLabel} onChange={(e) => setRoleLabel(e.target.value)} />
+    <div className="space-y-6">
+      <div className="flex justify-between">
+        <h2 className="text-2xl font-bold">Depoimentos</h2>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Novo Depoimento</Button>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Depoimento</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2"><Label>Nome do Cliente</Label><Input value={clientName} onChange={e => setClientName(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Função/Título (ex: Paciente)</Label><Input value={roleLabel} onChange={e => setRoleLabel(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Depoimento</Label><Textarea value={quote} onChange={e => setQuote(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Avaliação (1-5)</Label><Input type="number" max={5} min={1} value={rating} onChange={e => setRating(Number(e.target.value))} /></div>
+              <div className="space-y-2"><Label>Ordem</Label><Input type="number" value={sortOrder} onChange={e => setSortOrder(Number(e.target.value))} /></div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="t-sort">Ordem</Label>
-              <Input id="t-sort" type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} />
-            </div>
+            <div className="space-y-2"><Label>Foto URL</Label><Input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} /></div>
+            <div className="flex items-center gap-2"><Switch checked={isActive} onCheckedChange={setIsActive} /><Label>Ativo</Label></div>
           </div>
+          <DialogFooter>
+            <Button onClick={handleSave} disabled={saving}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <div className="grid gap-2">
-            <Label htmlFor="t-quote">Texto</Label>
-            <Textarea id="t-quote" value={quote} onChange={(e) => setQuote(e.target.value)} />
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <Switch checked={isActive} onCheckedChange={setIsActive} />
-              <span className="text-sm text-foreground/80">Ativo</span>
-            </div>
-            <Button variant="premium" disabled={!canAdd || saving} onClick={addRow}>
-              {saving ? "Salvando..." : "Adicionar"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-2xl border bg-background/70 shadow-soft">
-        <CardHeader>
-          <CardTitle className="font-display text-xl text-ink">Depoimentos cadastrados</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          {isLoading && <p className="text-sm text-foreground/70">Carregando...</p>}
-          {error && <p className="text-sm text-destructive">Erro ao carregar.</p>}
-
-          {(data ?? []).map((t) => (
-            <div key={t.id} className="rounded-xl bg-secondary/40 p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-                <div>
-                  <p className="text-sm font-medium text-ink">{t.role_label}</p>
-                  <p className="mt-1 text-sm text-foreground/80">“{t.quote}”</p>
-                  <p className="mt-2 text-xs text-foreground/60">Ordem: {t.sort_order}</p>
-                </div>
-                <div className="flex flex-col gap-2 sm:items-end">
-                  <div className="flex items-center gap-3">
-                    <Switch checked={t.is_active} onCheckedChange={(v) => toggleActive(t.id, v)} />
-                    <span className="text-xs text-foreground/70">Ativo</span>
+      <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+        {data?.map(t => (
+          <Card key={t.id}>
+            <CardContent className="p-4 flex gap-4">
+              <div className="shrink-0 text-primary"><Quote className="h-6 w-6" /></div>
+              <div className="flex-1 space-y-2">
+                <p className="italic text-sm text-foreground/80">"{t.quote}"</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {t.photo_url && <img src={t.photo_url} className="h-8 w-8 rounded-full object-cover" />}
+                    <div>
+                      <p className="font-semibold text-xs">{t.client_name || "Anônimo"}</p>
+                      <div className="flex text-yellow-500"><Star className="h-3 w-3 fill-current" /> <span className="text-xs ml-1">{t.rating}</span></div>
+                    </div>
                   </div>
-                  <Button variant="outline" onClick={() => removeRow(t.id)}>
-                    Remover
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(t)}><Pencil className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeTestimonial(t.id)}><Trash2 className="h-3 w-3" /></Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-
-          {(data ?? []).length === 0 && !isLoading && <p className="text-sm text-foreground/70">Nenhum ainda.</p>}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

@@ -51,6 +51,10 @@ export default {
         // Brand tokens (Além da Pele)
         ink: "hsl(var(--ink))",
         gold: "hsl(var(--gold))",
+        "mystic-black": "#0F1A17",
+        "mystic-deep": "#1C2B26",
+        "mystic-light": "#2E3F38",
+        "energy-gold": "#C8A96A",
         surface: {
           DEFAULT: "hsl(var(--surface))",
           foreground: "hsl(var(--surface-foreground))",
@@ -69,7 +73,8 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Arial", "sans-serif"],
-        display: ["Playfair Display", "ui-serif", "Georgia", "serif"],
+        display: ["Cormorant Garamond", "Playfair Display", "ui-serif", "Georgia", "serif"],
+        serif: ["Cormorant Garamond", "Playfair Display", "ui-serif", "Georgia", "serif"],
       },
       boxShadow: {
         soft: "0 12px 30px -18px hsl(var(--ink) / 0.35)",
@@ -101,11 +106,22 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" },
         },
+        "pulse-portal": {
+          "0%, 100%": { transform: "translate(-50%, -50%) scale(1)", opacity: "0.2" },
+          "50%": { transform: "translate(-50%, -50%) scale(1.05)", opacity: "0.35" },
+        },
+        "drift": {
+          "0%": { transform: "translate(0, 0)" },
+          "50%": { transform: "translate(-2%, 2%)" },
+          "100%": { transform: "translate(0, 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "float-y": "float-y 7s ease-in-out infinite",
+        "pulse-portal": "pulse-portal 8s ease-in-out infinite",
+        "drift": "drift 30s ease-in-out infinite",
       },
     },
   },

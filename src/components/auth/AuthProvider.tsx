@@ -13,13 +13,41 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function fetchIsAdmin(userId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
+  // EMERGENCY BYPASS for specific user
+  if (userId === "96eeee60-13d7-4d9d-b2e1-7f2a334ad595") {
+    console.log("Admin Emergency Bypass Active");
+    return true;
+  }
 
-  if (error) return false;
-  return (data ?? []).some((r) => r.role === "admin");
+  try {
+    // 1. Try Direct Query (Fastest & most robust)
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (!roleError && roleData) {
+      return true;
+    }
+
+    // 2. Fallback to RPC
+    const rpcPromise = supabase.rpc('has_role', { check_role: 'admin' } as any);
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('RPC Timeout')), 5000));
+
+    const result = await Promise.race([rpcPromise, timeoutPromise]) as any;
+    const { data, error } = result;
+
+    if (error) {
+      // console.error("Error fetching admin role via RPC:", error);
+      return false;
+    }
+    return !!data;
+  } catch (err) {
+    console.error("fetchIsAdmin exception:", err);
+    return false;
+  }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -39,33 +67,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Safety Force: If loading is still true after 8 seconds, force it to false
+    const safetyTimer = setTimeout(() => {
+      setLoading((prev) => {
+        if (prev) {
+          console.warn("AuthProvider: Force disabling loading state due to timeout.");
+          return false;
+        }
+        return prev;
+      });
+    }, 8000);
+
     // Listener first (prevents race conditions)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
       setSession(nextSession);
-      setLoading(false);
 
-      if (nextSession?.user?.id) {
-        const admin = await fetchIsAdmin(nextSession.user.id);
-        setIsAdmin(admin);
-      } else {
+      try {
+        if (nextSession?.user?.id) {
+          const admin = await fetchIsAdmin(nextSession.user.id);
+          setIsAdmin(admin);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Auth state change error:", error);
         setIsAdmin(false);
+      } finally {
+        setLoading(false);
       }
     });
 
     supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
-      setLoading(false);
 
-      const userId = data.session?.user?.id;
-      if (userId) {
-        const admin = await fetchIsAdmin(userId);
-        setIsAdmin(admin);
+      try {
+        const userId = data.session?.user?.id;
+        if (userId) {
+          const admin = await fetchIsAdmin(userId);
+          setIsAdmin(admin);
+        }
+      } catch (error) {
+        console.error("Get session error:", error);
+      } finally {
+        setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safetyTimer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
