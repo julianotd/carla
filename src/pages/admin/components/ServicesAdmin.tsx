@@ -20,6 +20,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 type ServiceRow = {
   id: string;
@@ -263,12 +264,13 @@ export function ServicesAdmin() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>URL da Imagem de Capa</Label>
-              <div className="flex gap-2">
-                <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." />
-                {imageUrl && <img src={imageUrl} alt="Preview" className="h-10 w-10 rounded object-cover border" />}
-              </div>
+            <div className="space-y-4">
+              <Label>Capa do Serviço (Upload)</Label>
+              <ImageUpload
+                  value={imageUrl}
+                  onChange={setImageUrl}
+                  folder="services"
+              />
             </div>
 
             <div className="flex items-center gap-2">

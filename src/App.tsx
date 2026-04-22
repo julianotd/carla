@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AdminGuard } from "@/components/auth/AdminGuard";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -30,8 +31,9 @@ import MyAgendaPage from "@/pages/admin/agenda/MyAgendaPage";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+  <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
       <Toaster />
       <Sonner />
       <AuthProvider>
@@ -69,8 +71,9 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

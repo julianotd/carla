@@ -67,7 +67,7 @@ export function LandingPage() {
         {/* 2. O QUE É ESSE ESPAÇO? */}
         <section id="conceito" className="relative py-24 sm:py-32 overflow-hidden bg-gradient-to-b from-mystic-black to-mystic-deep">
           {/* Subtle overlay texture */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+          <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('/noise.svg')]" />
           
           <motion.div
             initial="hidden"
@@ -121,7 +121,10 @@ export function LandingPage() {
             >
               {services.map((service: any, idx) => (
                 <motion.div key={idx} variants={fadeInUp}>
-                  <div className="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_-20px_rgba(200,169,106,0.3)] hover:border-energy-gold/30 h-full flex flex-col justify-between cursor-pointer">
+                  <div 
+                    onClick={() => window.open(links.whatsapp, '_blank', 'noopener,noreferrer')}
+                    className="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_-20px_rgba(200,169,106,0.3)] hover:border-energy-gold/30 h-full flex flex-col justify-between cursor-pointer"
+                  >
                     
                     <div className="absolute inset-0 bg-gradient-to-t from-mystic-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
                     
@@ -149,7 +152,7 @@ export function LandingPage() {
         </section>
 
         {/* 4. COMO FUNCIONA O PROCESSO (TIMELINE) */}
-        <section className="py-24 sm:py-32 bg-gradient-to-b from-mystic-deep to-mystic-black relative overflow-hidden">
+        <section id="como-funciona" className="py-24 sm:py-32 bg-gradient-to-b from-mystic-deep to-mystic-black relative overflow-hidden">
           {/* Subtle background glow */}
           <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-energy-gold/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
           
@@ -192,56 +195,88 @@ export function LandingPage() {
         </section>
 
         {/* 5. QUEM CONDUZ (THERAPIST) */}
-        <section id="profissionais" className="py-24 bg-mystic-black relative">
-          <div className="container max-w-5xl">
+        <section id="profissionais" className="py-24 sm:py-32 bg-mystic-black relative overflow-hidden">
+          <div className="container max-w-6xl relative z-10">
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={staggerContainer}
-              className="text-center mb-16"
+              className="text-center mb-20 sm:mb-28"
             >
-              <motion.h2 variants={fadeInUp} className="font-display text-4xl mb-4">
+              <motion.h2 variants={fadeInUp} className="font-display text-4xl sm:text-5xl mb-6 text-[#EAE6DF]">
                 Quem conduz o campo
               </motion.h2>
-              <motion.p variants={fadeInUp} className="text-[#EAE6DF]/60 text-lg mb-12">
+              <motion.p variants={fadeInUp} className="text-[#EAE6DF]/60 text-lg sm:text-xl font-light mb-12 max-w-2xl mx-auto">
                 Cada atendimento é conduzido com escuta, presença e respeito ao seu momento.
               </motion.p>
-              
-              <div className="grid md:grid-cols-2 gap-8 mt-8">
-                {professionals?.map((pro: any) => (
-                  <motion.div key={pro.id} variants={fadeInUp} className="relative group rounded-3xl overflow-hidden bg-white/5 border border-white/10 aspect-square sm:aspect-auto sm:h-[450px]">
-                    {/* Fake Background Image overlay since real is not available */}
-                    <div className="absolute inset-0 bg-mystic-deep/50 mix-blend-multiply z-10 transition-all duration-700 group-hover:bg-mystic-deep/40" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-30 filter grayscale blur-[2px] transition-all duration-700 group-hover:scale-105 group-hover:blur-none group-hover:grayscale-0 group-hover:opacity-70 z-0">
-                      {pro.image ? (
-                        <img src={pro.image} alt={pro.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <Users className="w-48 h-48" />
-                      )}
+            </motion.div>
+
+            <div className="flex flex-col gap-24 sm:gap-32">
+              {professionals?.map((pro: any, index: number) => {
+                const isEven = index % 2 === 0;
+                // Organic border radius variations similar to the reference
+                const blobStyle = isEven 
+                  ? { borderRadius: "60% 40% 60% 40% / 40% 60% 40% 60%" }
+                  : { borderRadius: "40% 60% 40% 60% / 60% 40% 60% 40%" };
+
+                return (
+                  <motion.div 
+                    key={pro.id}
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-15%" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-12 md:gap-20`}
+                  >
+                    {/* Image side */}
+                    <div className="w-full md:w-1/2 flex justify-center">
+                      <div 
+                        className="relative group w-72 h-[22rem] sm:w-[26rem] sm:h-[32rem] overflow-hidden" 
+                        style={blobStyle}
+                      >
+                        <div className="absolute inset-0 bg-energy-gold/10 mix-blend-multiply z-10 transition-opacity duration-700 group-hover:opacity-0 pointer-events-none" />
+                        <div className="w-full h-full transform transition-transform duration-[1.5s] ease-out group-hover:scale-[1.05]">
+                           {pro.image ? (
+                            <img src={pro.image} alt={pro.name} className="w-full h-full object-cover filter contrast-125 saturate-50 group-hover:saturate-100 transition-all duration-[1.5s] ease-out" />
+                          ) : (
+                            <div className="w-full h-full bg-mystic-deep flex items-center justify-center text-energy-gold">
+                              <Users className="w-24 h-24 opacity-50" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="absolute inset-0 z-20 p-8 flex flex-col justify-end text-left h-full">
-                      <div className="transform transition-transform duration-500 translate-y-8 group-hover:translate-y-0">
-                        <h3 className="font-display text-3xl font-medium text-energy-gold mb-1">{pro.name}</h3>
-                        <p className="text-white/80 font-light mb-4 text-sm">{pro.role}</p>
-                        
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 space-y-4">
-                          <p className="text-[#EAE6DF]/90 text-sm leading-relaxed border-l-2 border-energy-gold/50 pl-4 italic">
-                            "Acredito que a verdadeira cura acontece quando criamos um espaço seguro o suficiente para o seu corpo aceitar soltar."
-                          </p>
-                          <div className="pt-2">
-                             <Button asChild size="sm" className="bg-transparent border border-energy-gold text-energy-gold hover:bg-energy-gold hover:text-mystic-black rounded-full h-9">
-                              <a href={links.whatsapp} target="_blank" rel="noreferrer">Agendar com {pro.name.split(' ')[0]}</a>
-                            </Button>
-                          </div>
+
+                    {/* Text side */}
+                    <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
+                      <h3 className="font-display text-4xl sm:text-5xl font-medium text-energy-gold mb-3">{pro.name}</h3>
+                      <div className="flex flex-col items-center md:items-start text-center md:text-left mb-8">
+                        <p className="text-white/50 font-sans uppercase tracking-[0.2em] text-xs sm:text-sm">
+                          {pro.role}
+                        </p>
+                        {pro.socialUrl && (
+                          <a href={pro.socialUrl} target="_blank" rel="noreferrer" className="mt-3 text-[#EAE6DF]/50 hover:text-energy-gold transition-colors flex items-center gap-2 text-sm">
+                            <Instagram className="w-4 h-4" /> Perfil Social
+                          </a>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-8 flex flex-col items-center md:items-start">
+                        <p className="text-[#EAE6DF]/90 text-lg sm:text-xl font-light leading-relaxed border-l-2 border-energy-gold/50 pl-6 italic max-w-lg">
+                          "Acredito que a verdadeira cura acontece quando criamos um espaço seguro o suficiente para o seu corpo aceitar soltar."
+                        </p>
+                        <div className="pt-4">
+                          <Button asChild size="lg" className="bg-transparent border border-energy-gold text-energy-gold hover:bg-energy-gold hover:text-mystic-black rounded-full px-8 h-12 transition-all duration-500 font-sans tracking-wide">
+                            <a href={links.whatsapp} target="_blank" rel="noreferrer">Agendar com {pro.name.split(' ')[0]}</a>
+                          </Button>
                         </div>
                       </div>
                     </div>
                   </motion.div>
-                ))}
-              </div>
-            </motion.div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -394,10 +429,10 @@ export function LandingPage() {
       </main>
 
       {/* 10. RODAPÉ */}
-      <footer className="bg-mystic-black border-t border-white/5 pt-16 pb-8">
+      <footer id="contato" className="bg-mystic-black border-t border-white/5 pt-16 pb-8">
         <div className="container max-w-6xl">
           <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16">
-            <div className="max-w-sm">
+            <div id="local" className="max-w-sm">
               <div className="flex items-center gap-2 mb-6">
                 <Sparkles className="w-5 h-5 text-energy-gold" />
                 <span className="font-display text-2xl text-[#EAE6DF]">{brand.name}</span>

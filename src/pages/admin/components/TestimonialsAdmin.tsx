@@ -14,10 +14,11 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
+  DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export function TestimonialsAdmin() {
   const qc = useQueryClient();
@@ -125,7 +126,10 @@ export function TestimonialsAdmin() {
               <div className="space-y-2"><Label>Avaliação (1-5)</Label><Input type="number" max={5} min={1} value={rating} onChange={e => setRating(Number(e.target.value))} /></div>
               <div className="space-y-2"><Label>Ordem</Label><Input type="number" value={sortOrder} onChange={e => setSortOrder(Number(e.target.value))} /></div>
             </div>
-            <div className="space-y-2"><Label>Foto URL</Label><Input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} /></div>
+            <div className="space-y-4">
+              <Label>Foto do Cliente</Label>
+              <ImageUpload value={photoUrl} onChange={setPhotoUrl} folder="testimonials" />
+            </div>
             <div className="flex items-center gap-2"><Switch checked={isActive} onCheckedChange={setIsActive} /><Label>Ativo</Label></div>
           </div>
           <DialogFooter>

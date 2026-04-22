@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 type EventRow = {
   id: string;
@@ -61,8 +62,7 @@ export function EventsAdmin() {
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [location, setLocation] = useState("");
-  const [coverUrl, setCoverUrl] = useState("");
-  const [isActive, setIsActive] = useState(true);
+  const [isPublished, setIsPublished] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
@@ -72,8 +72,7 @@ export function EventsAdmin() {
     setDescription("");
     setStartsAt("");
     setLocation("");
-    setCoverUrl("");
-    setIsActive(true);
+    setIsPublished(true);
   }
 
   const handleEdit = (ev: any) => {
@@ -82,9 +81,8 @@ export function EventsAdmin() {
     setSlug(ev.slug);
     setDescription(ev.description || "");
     setStartsAt(ev.starts_at ? ev.starts_at.slice(0, 16) : ""); // datetime-local format
-    setLocation(ev.location_text || ev.location || ""); // Handling potentially different column name
-    setCoverUrl(ev.cover_image_url || "");
-    setIsActive(ev.is_active ?? true);
+    setLocation(ev.location || "");
+    setIsPublished(ev.is_published ?? true);
     setIsDialogOpen(true);
   };
 
@@ -97,9 +95,8 @@ export function EventsAdmin() {
       slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       description,
       starts_at: startsAt || new Date().toISOString(),
-      location_text: location, // SQL used location_text
-      cover_image_url: coverUrl,
-      is_active: isActive
+      location: location,
+      is_published: isPublished
     };
 
     let error;
@@ -140,15 +137,14 @@ export function EventsAdmin() {
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Evento</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Título</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
               <div className="space-y-2"><Label>Data/Hora</Label><Input type="datetime-local" value={startsAt} onChange={e => setStartsAt(e.target.value)} /></div>
             </div>
             <div className="space-y-2"><Label>Slug</Label><Input value={slug} onChange={e => setSlug(e.target.value)} /></div>
             <div className="space-y-2"><Label>Local</Label><Input value={location} onChange={e => setLocation(e.target.value)} /></div>
             <div className="space-y-2"><Label>Descrição</Label><Textarea value={description} onChange={e => setDescription(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Capa URL</Label><Input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} /></div>
-            <div className="flex items-center gap-2"><Switch checked={isActive} onCheckedChange={setIsActive} /><Label>Ativo</Label></div>
+            <div className="flex items-center gap-2"><Switch checked={isPublished} onCheckedChange={setIsPublished} /><Label>Publicado</Label></div>
           </div>
           <DialogFooter>
             <Button onClick={handleSave} disabled={saving}>Salvar</Button>
@@ -159,7 +155,6 @@ export function EventsAdmin() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data?.map(ev => (
           <Card key={ev.id} className="overflow-hidden">
-            {ev.cover_image_url && <div className="h-32 bg-cover bg-center" style={{ backgroundImage: `url(${ev.cover_image_url})` }} />}
             <CardContent className="p-4">
               <h3 className="font-bold truncate">{ev.title}</h3>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
@@ -168,7 +163,7 @@ export function EventsAdmin() {
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                 <MapPin className="h-3 w-3" />
-                {ev.location_text || "Online"}
+                {ev.location || "Online"}
               </div>
               <div className="flex justify-end gap-2 mt-4">
                 <Button variant="outline" size="sm" onClick={() => handleEdit(ev)}><Pencil className="h-3 w-3" /></Button>

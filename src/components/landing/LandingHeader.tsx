@@ -13,7 +13,7 @@ import {
 import { BRAND, WHATSAPP_LINK } from "./landingContent";
 
 const NAV_ITEMS = [
-  { label: "Sobre", href: "#sobre" },
+  { label: "Sobre", href: "#conceito" },
   { label: "Serviços", href: "#servicos" },
   { label: "Como funciona", href: "#como-funciona" },
   { label: "Local", href: "#local" },

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 type TherapistRow = {
     id: string;
@@ -30,6 +31,7 @@ type TherapistRow = {
     specialties: string[] | null;
     photo_url: string | null;
     contact_whatsapp: string | null;
+    social_url: string | null;
     is_active: boolean;
 };
 
@@ -80,6 +82,7 @@ export function TherapistsAdmin() {
     const [specialties, setSpecialties] = useState("");
     const [photoUrl, setPhotoUrl] = useState("");
     const [whatsapp, setWhatsapp] = useState("");
+    const [socialUrl, setSocialUrl] = useState("");
     const [isActive, setIsActive] = useState(true);
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
@@ -101,6 +104,7 @@ export function TherapistsAdmin() {
         setSpecialties("");
         setPhotoUrl("");
         setWhatsapp("");
+        setSocialUrl("");
         setIsActive(true);
         setSelectedServices([]);
     };
@@ -113,6 +117,7 @@ export function TherapistsAdmin() {
         setSpecialties((t.specialties || []).join(", "));
         setPhotoUrl(t.photo_url || "");
         setWhatsapp(t.contact_whatsapp || "");
+        setSocialUrl(t.social_url || "");
         setIsActive(t.is_active);
         // selectedServices will be populated by useQuery + useMemo
         setIsDialogOpen(true);
@@ -132,6 +137,7 @@ export function TherapistsAdmin() {
             specialties: specsArray.length > 0 ? specsArray : null,
             photo_url: photoUrl.trim() || null,
             contact_whatsapp: whatsapp.trim() || null,
+            social_url: socialUrl.trim() || null,
             is_active: isActive,
         };
 
@@ -243,7 +249,7 @@ export function TherapistsAdmin() {
                         {/* Services Management */}
                         <div className="space-y-2 border p-4 rounded-md">
                             <Label>Serviços Atendidos</Label>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                                 {services?.map(s => (
                                     <div key={s.id} className="flex items-center space-x-2">
                                         <Checkbox
@@ -268,14 +274,24 @@ export function TherapistsAdmin() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>WhatsApp (apenas números)</Label>
-                                <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="5511999999999" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>WhatsApp (apenas números)</Label>
+                                    <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="5511999999999" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Perfil Social (URL: Instagram, LinkedIn, etc)</Label>
+                                    <Input value={socialUrl} onChange={e => setSocialUrl(e.target.value)} placeholder="https://instagram.com/..." />
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Foto URL</Label>
-                                <Input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} />
+                            <div className="space-y-4">
+                                <Label>Foto do Terapeuta</Label>
+                                <ImageUpload
+                                    value={photoUrl}
+                                    onChange={setPhotoUrl}
+                                    folder="therapists"
+                                />
                             </div>
                         </div>
 

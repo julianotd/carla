@@ -36,8 +36,8 @@ export function PortalHero() {
   useEffect(() => {
     if (soundEnabled) {
       if (!audioRef.current) {
-        // Placeholder calming sound (meditation bell / wind)
-        audioRef.current = new Audio("https://cdn.pixabay.com/download/audio/2022/01/18/audio_015239b0ee.mp3?filename=singing-bowl-and-wind-chimes-103138.mp3");
+        // Local calming sound
+        audioRef.current = new Audio("/ambient.ogg");
         audioRef.current.loop = true;
         audioRef.current.volume = 0.3;
       }
@@ -81,7 +81,7 @@ export function PortalHero() {
       {/* 3. FOG (Smoke Drift Layer) */}
       <motion.div 
         style={{ y: yFog }}
-        className="absolute inset-0 scale-[1.3]" // Scale larger to allow drifting without seeing edges
+        className="absolute inset-0 scale-[1.3] pointer-events-none" // Scale larger to allow drifting without seeing edges
       >
         <div className="absolute inset-0 spiritual-fog opacity-[0.09] animate-drift mix-blend-overlay" />
       </motion.div>
