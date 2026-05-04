@@ -11,7 +11,15 @@ interface Point {
   delay: number;
 }
 
-export function PortalHero() {
+export function PortalHero({ 
+  title, 
+  subtitle, 
+  cta 
+}: { 
+  title?: React.ReactNode; 
+  subtitle?: string; 
+  cta?: string;
+}) {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -136,13 +144,25 @@ export function PortalHero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.5, delay: 1, ease: "easeOut" }}
       >
+        <motion.span 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.8 }}
+          className="block text-energy-gold/80 text-sm sm:text-base md:text-lg uppercase tracking-[0.3em] mb-6 font-sans"
+        >
+          {subtitle || "Terapia Integrativa & Bem-estar Sutil"}
+        </motion.span>
         <h1 
-          className="text-4xl sm:text-5xl md:text-[72px] leading-tight font-medium tracking-wide drop-shadow-[0_0_25px_rgba(200,169,106,0.3)] mb-12"
+          className="text-4xl sm:text-5xl md:text-[64px] leading-tight font-medium tracking-wide drop-shadow-[0_0_25px_rgba(200,169,106,0.3)] mb-12"
           style={{ textShadow: "0px 4px 20px rgba(0,0,0,0.5)" }}
         >
-          Nem tudo que transforma <br className="hidden md:block" />
-          pode ser visto. <br className="hidden md:block" />
-          <span className="text-energy-gold/90">Mas pode ser sentido.</span>
+          {title || (
+            <>
+              Nem tudo que transforma <br className="hidden md:block" />
+              pode ser visto. <br className="hidden md:block" />
+              <span className="text-energy-gold/90">Mas pode ser sentido.</span>
+            </>
+          )}
         </h1>
 
         <motion.div
@@ -154,7 +174,7 @@ export function PortalHero() {
             asChild
             className="bg-energy-gold text-mystic-black hover:bg-white hover:text-mystic-black hover:scale-105 hover:shadow-[0_0_30px_rgba(200,169,106,0.6)] border-none rounded-full px-12 h-14 text-lg font-sans font-medium transition-all duration-300"
           >
-            <a href="#conceito">Quero acessar esse espaço</a>
+            <a href="#conceito">{cta || "Quero acessar esse espaço"}</a>
           </Button>
         </motion.div>
       </motion.div>

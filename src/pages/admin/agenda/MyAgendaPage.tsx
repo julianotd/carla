@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AgendaPage from "./AgendaPage"; // We'll reuse the logic, but we need to pass a "therapistId" prop or handle it there.
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Therapist } from "@/lib/agenda/types";
-import { listTherapists } from "@/lib/agenda/api";
+import { listTherapists, getTherapistByUserId } from "@/lib/agenda/api";
 
 // Ideally AgendaPage should accept a `filterTherapistId` prop.
 // Since I cannot easily modify AgendaPage without reading it again (which I just wrote), 
@@ -24,22 +24,47 @@ import { listTherapists } from "@/lib/agenda/api";
 // Alternative: Just create a specialized page that fetches only ME.
 
 export default function MyAgendaPage() {
-    // MOCK: In a real app, we get the current user's attached therapist ID.
-    // For now, let's pretend I am "Carla" (th_carla).
-    const currentTherapistId = "th_carla";
+    const { user } = useAuth();
+    const [therapist, setTherapist] = useState<Therapist | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            if (!user) return;
+            try {
+                const t = await getTherapistByUserId(user.id);
+                setTherapist(t);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, [user]);
+
+    if (loading) return <div className="p-8 text-center">Carregando perfil...</div>;
+
+    if (!therapist) {
+        return (
+            <div className="p-8 text-center max-w-md mx-auto">
+                <h2 className="text-xl font-bold mb-2">Perfil de Terapeuta não encontrado</h2>
+                <p className="text-muted-foreground mb-4">
+                    Sua conta de usuário não está vinculada a um perfil de terapeuta. 
+                    Contate o administrador para configurar seu acesso.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Minha Agenda</h1>
-            <p className="text-muted-foreground mb-8">
-                Visão focada apenas nos seus atendimentos. (Funcionalidade demonstrativa: Filtrando por Carla)
+            <h1 className="text-2xl font-bold mb-1">Minha Agenda</h1>
+            <p className="text-muted-foreground mb-6">
+                Gerencie seus atendimentos e disponibilidade: {therapist.name}
             </p>
 
-            {/* 
-                For the MVP, I'll just re-use the AgendaBoard but filter the data locally here.
-                This requires duplicating some logic from AgendaPage, but it's safer than breaking AgendaPage now.
-             */}
-            <AgendaPageWrapper therapistId={currentTherapistId} />
+            <AgendaPageWrapper therapistId={therapist.id} />
         </div>
     );
 }
@@ -49,7 +74,6 @@ import { AgendaBoard } from "@/components/admin/agenda/AgendaBoard";
 import { AppointmentDrawer } from "@/components/admin/agenda/AppointmentDrawer";
 import { listAppointments, listTimeOff } from "@/lib/agenda/api";
 import { Appointment, TimeOff } from "@/lib/agenda/types";
-import { MOCK_THERAPISTS } from "@/lib/agenda/mockData";
 import { format, addDays } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,14 +85,15 @@ function AgendaPageWrapper({ therapistId }: { therapistId: string }) {
     const [date, setDate] = useState(new Date());
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [timeOff, setTimeOff] = useState<TimeOff[]>([]);
-    const [therapists, setTherapists] = useState<Therapist[]>([]); // Only ME
+    const [therapists, setTherapists] = useState<Therapist[]>([]); 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
     const [selectedSlot, setSelectedSlot] = useState<{ therapistId: string; date: Date } | null>(null);
 
     const fetchData = async () => {
-        // 1. Therapists - Only Me
-        const me = MOCK_THERAPISTS.find(t => t.id === therapistId);
+        // 1. Therapists - Only Me (Fetch from DB to be sure)
+        const all = await listTherapists();
+        const me = all.find(t => t.id === therapistId);
         if (me) setTherapists([me]);
 
         // 2. Data

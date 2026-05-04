@@ -14,12 +14,12 @@ import {
   GitCommit
 } from "lucide-react";
 
+import { useAuth } from "@/components/auth/AuthProvider";
 import { cn } from "@/lib/utils";
-
-const role: "admin" | "secretary" | "therapist" = "admin"; // TODO: Get from AuthContext
 
 // Move items inside component or use memo if dependent on role
 export function AdminSidebar() {
+  const { role } = useAuth();
   const location = useLocation();
 
   const items = [
@@ -30,13 +30,13 @@ export function AdminSidebar() {
     { title: "Faqs (Dúvidas)", url: "/admin/faqs", icon: HelpCircle },
     { title: "Depoimentos", url: "/admin/testimonials", icon: MessageSquare },
 
-    // Agenda: mostrar "Clínica" só para admin/secretária
-    ...(role === "therapist"
-      ? []
-      : [{ title: "Agenda (Clínica)", url: "/admin/agenda", icon: Calendar }]),
-
     // Agenda (Minha) sempre visível
     { title: "Agenda (Minha)", url: "/admin/agenda/minha", icon: Calendar },
+
+    // Agenda: mostrar "Clínica" só para admin/receptionist
+    ...((role === "admin" || role === "receptionist")
+      ? [{ title: "Agenda (Clínica)", url: "/admin/agenda", icon: Calendar }]
+      : []),
 
     { title: "Terapeutas", url: "/admin/therapists", icon: Users },
     { title: "Conteúdo Site", url: "/admin/content", icon: Settings },

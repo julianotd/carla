@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Shield, ShieldAlert, Check } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -27,6 +28,7 @@ type UserRoleRow = {
 export function RolesAdmin() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { refreshRole } = useAuth();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "roles"],
@@ -76,6 +78,7 @@ export function RolesAdmin() {
 
       toast({ title: "Permissões atualizadas!" });
       qc.invalidateQueries({ queryKey: ["admin", "roles"] });
+      refreshRole();
     } catch (err: any) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
     }

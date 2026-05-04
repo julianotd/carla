@@ -30,6 +30,7 @@ async function fetchSiteContent(): Promise<Record<string, string>> {
 }
 
 type ServiceRow = {
+  id?: string;
   title: string;
   description: string;
   slug?: string;
@@ -38,17 +39,19 @@ type ServiceRow = {
   duration?: string; // Mapped from duration_min or static
   cover_image_url?: string;
   benefits?: string[];
+  therapistId?: string;
+  phrase?: string;
 };
 
 async function fetchServices(): Promise<ServiceRow[]> {
   const { data, error } = await supabase
     .from("services")
-    .select("*")
+    .select("*, therapist_services(therapist_id)")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .limit(50);
   if (error) return [];
-  return (data ?? []) as ServiceRow[];
+  return (data ?? []) as any[];
 }
 
 type TestimonialRow = { role_label: string; quote: string };
@@ -122,21 +125,38 @@ export function useLandingData() {
   const dbServices = servicesQuery.data?.map(s => ({
     ...s,
     duration: s.duration_min ? `${s.duration_min} min` : undefined,
-    hoverText: (s as any).hover_text // Map snake_case to camelCase
+    phrase: (s as any).hover_text, // Map snake_case hover_text to 'phrase' used by UI
+    therapistId: (s as any).therapist_services?.[0]?.therapist_id // Extract first linked therapist
   }));
 
   const services = dbServices && dbServices.length > 0 ? dbServices : (STATIC_SERVICES as unknown as ServiceRow[]);
 
-  const mappedTherapists = therapistsQuery.data?.map((t: any) => ({
-    id: t.slug,
-    name: t.name,
-    role: t.bio || "Terapeuta", // using bio as role/short text
-    specialty: t.specialties ? t.specialties.join(", ") : "",
-    image: t.photo_url || null,
-    socialUrl: t.social_url || null,
-  }));
+  const mappedTherapists = (therapistsQuery.data || PROFESSIONALS).map((t: any) => {
+    const slug = t.slug || t.id;
+    const therapistServices = services.filter((s: any) => s.therapistId === t.id || s.therapistSlug === slug);
+    const initials = t.name
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
 
-  const finalProfessionals = mappedTherapists && mappedTherapists.length > 0 ? mappedTherapists : PROFESSIONALS;
+    return {
+      id: t.id,
+      slug: slug,
+      name: t.name,
+      role: t.id === "carla" ? "principal" : "convidado",
+      roleLabel: t.id === "carla" ? "Terapeuta integrativa · Fundadora" : t.role || "Terapeuta Convidada",
+      bio: t.bio || "",
+      photo: t.photo_url || t.image || null,
+      emoji: t.avatar || "✨",
+      initials,
+      serviceCount: therapistServices.length,
+      socialUrl: t.social_url || null,
+    };
+  });
+
+  const finalProfessionals = mappedTherapists;
 
   const dbTestimonials = testimonialsQuery.data;
   const testimonials = dbTestimonials && dbTestimonials.length > 0 ? dbTestimonials : STATIC_TESTIMONIALS;
@@ -157,13 +177,52 @@ export function useLandingData() {
 
   const finalEvents = dbEvents && dbEvents.length > 0 ? dbEvents : EVENTS;
 
+  const hero = {
+    ...HERO,
+    title: content.hero_title ?? HERO.title,
+    subtitle: content.hero_subtitle ?? HERO.subtitle,
+    cta: content.hero_cta ?? HERO.cta,
+  };
+
+  const aboutSection = {
+    title: content.about_title ?? "Este não é apenas um espaço terapêutico.",
+    description: content.about_description ?? "É um campo onde processos se revelam, emoções ganham voz e a energia encontra caminho.",
+  };
+
+  const therapistsSection = {
+    label: content.therapists_label ?? "Nossos terapeutas",
+    title: content.therapists_title ?? "Quem conduz os caminhos",
+    description: content.therapists_description ?? "Cada terapeuta traz sua formação, sua vivência e sua forma única de acolher.",
+  };
+
+  const eventsSection = {
+    label: content.events_label ?? "Experiências",
+    title: content.events_title ?? "Próximos Encontros",
+    description: content.events_description ?? "Espaços presenciais e online para aprofundar seu processo de autoconhecimento e cura.",
+  };
+
+  const faqSection = {
+    title: content.faq_title ?? "Dúvidas Frequentes",
+    description: content.faq_description ?? "Tudo o que você precisa saber para começar sua jornada.",
+  };
+
+  const contactSection = {
+    title: content.contact_title ?? "Pronta para iniciar sua travessia?",
+    description: content.contact_description ?? "Clique abaixo para conversarmos pelo WhatsApp e encontrarmos o melhor caminho para você.",
+  };
+
   return {
     brand: derivedBrand,
     links: derivedLinks,
     services,
     testimonials,
     content,
-    hero: HERO,
+    hero,
+    aboutSection,
+    therapistsSection,
+    eventsSection,
+    faqSection,
+    contactSection,
     conceptCards: CONCEPT_CARDS,
     professionals: finalProfessionals,
     events: finalEvents,

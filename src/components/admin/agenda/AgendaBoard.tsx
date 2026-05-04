@@ -167,7 +167,7 @@ export function AgendaBoard({
                                     } else if (apt.status === "cancelled") {
                                         borderClass = "border-l-4 border-l-red-300";
                                         bgClass = "bg-red-50 text-red-700 opacity-60";
-                                    } else if (apt.status === "done") {
+                                    } else if (apt.status === "completed") {
                                         borderClass = "border-l-4 border-l-gray-500";
                                         bgClass = "bg-gray-100 text-gray-700";
                                     }
@@ -189,7 +189,7 @@ export function AgendaBoard({
                                                 {apt.mode === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
                                                 {height > 40 && (
                                                     <span className="uppercase text-[9px] tracking-wider opacity-70 border px-1 rounded border-current">
-                                                        {apt.status === 'requested' ? 'Pendente' : apt.status}
+                                                        {apt.status === 'pending' ? 'Pendente' : apt.status}
                                                     </span>
                                                 )}
                                             </div>

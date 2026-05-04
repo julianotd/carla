@@ -1,5 +1,5 @@
 export type Role = "admin" | "secretary" | "therapist";
-export type AppointmentStatus = "requested" | "confirmed" | "cancelled" | "no_show" | "done";
+export type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "no_show" | "completed";
 export type AppointmentMode = "in_person" | "online";
 
 export interface Therapist {
@@ -33,6 +33,7 @@ export interface Appointment {
     therapist_id: string;
     patient_id?: string;
     patient_name: string; // Denormalized for display
+    client_phone: string;
     service_id: string;
     start_at: string; // ISO string
     end_at: string;   // ISO string

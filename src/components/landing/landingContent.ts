@@ -49,44 +49,101 @@ export const CONCEPT_CARDS = [
 
 export const SERVICES = [
   {
+    id: "desbloqueio",
     title: "Desbloqueio Emocional",
-    description: "Liberação de padrões e emoções profundas.",
-    duration: "1h 30m",
-    hoverText: "Acessar memórias que o corpo ainda guarda",
+    phrase: "Acessar memórias que o corpo ainda guarda",
+    description: "Trabalho integrativo com respiração consciente, toque terapêutico e escuta sutil para liberar tensões emocionais armazenadas no corpo.",
+    duration: "60 min",
+    price: "R$ 220",
+    modality: "Presencial / Online",
+    category: "Individual",
+    therapistId: "carla",
+    featured: true,
+    icon: "🫧",
   },
   {
-    title: "Investigação Energética",
-    description: "Leitura sutil do campo e necessidades.",
-    duration: "1h",
-    hoverText: "Um olhar silencioso para o que não está fluindo",
-    gallery: [
-      "https://images.unsplash.com/photo-1544367563-12123d8965cd?q=80&w=800&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=800&auto=format&fit=crop",
-    ],
-  },
-  {
+    id: "regressao",
     title: "Regressão Terapêutica",
-    description: "Ressignificação de memórias e traumas.",
-    duration: "1h 30m",
-    hoverText: "Retornar à raiz do emaranhado para libertá-lo",
+    phrase: "Retornar à raiz do emaranhado para libertá-lo",
+    description: "Sessão guiada de regressão para acessar memórias significativas, compreender padrões repetitivos e promover resolução emocional profunda.",
+    duration: "90 min",
+    price: "R$ 280",
+    modality: "Presencial",
+    category: "Individual",
+    therapistId: "carla",
+    icon: "🌀",
   },
   {
-    title: "Massagem Terapêutica",
-    description: "Toque consciente para equilíbrio e relaxamento.",
-    duration: "1h",
-    hoverText: "O toque que acalma e reposiciona sua base orgânica",
-  },
-  {
+    id: "mandalas",
     title: "Mandalas de Cristais",
-    description: "Geometrias para harmonização e intenção.",
-    duration: "Personalizado",
-    hoverText: "Frequências da terra alinhando o seu espaço",
+    phrase: "Frequências da terra alinhando o seu espaço",
+    description: "Composição terapêutica com cristais em padrões geométricos sobre o corpo, harmonizando energia e promovendo equilíbrio vibracional.",
+    duration: "75 min",
+    price: "R$ 250",
+    modality: "Presencial",
+    category: "Individual",
+    therapistId: "carla",
+    icon: "💎",
   },
   {
+    id: "leitura-campo",
+    title: "Leitura do Campo",
+    phrase: "Ler o invisível que pede atenção",
+    description: "Percepção intuitiva do campo energético para identificar bloqueios, desalinhos e potenciais adormecidos — seguida de orientação personalizada.",
+    duration: "50 min",
+    price: "R$ 180",
+    modality: "Online / Presencial",
+    category: "Individual",
+    therapistId: "carla",
+    icon: "👁",
+  },
+  {
+    id: "aromaterapia",
     title: "Aromaterapia",
-    description: "Óleos essenciais para bem-estar emocional.",
-    duration: "Consultar",
-    hoverText: "A sabedoria da natureza conversando com suas emoções",
+    phrase: "O que o aroma revela, a mente não esconde",
+    description: "Óleos essenciais selecionados intuitivamente, aplicados por inalação e toque, para acessar emoções sutis e promover bem-estar profundo.",
+    duration: "60 min",
+    price: "R$ 200",
+    modality: "Presencial",
+    category: "Individual",
+    therapistId: "carla",
+    icon: "🌿",
+  },
+  {
+    id: "constelacao",
+    title: "Constelação Familiar",
+    phrase: "O que foi herdado pode ser transformado",
+    description: "Dinâmica terapêutica que revela padrões transgeracionais inconscientes, permitindo reconhecimento, pertencimento e libertação de lealdades.",
+    duration: "120 min",
+    price: "R$ 280",
+    modality: "Presencial",
+    category: "Grupo / Individual",
+    therapistId: "carla",
+    icon: "🪞",
+  },
+  {
+    id: "tarot",
+    title: "Tarot Terapêutico",
+    phrase: "Espelhos que revelam o que já sabemos",
+    description: "Leitura de tarot com abordagem terapêutica — não é adivinhação, é ferramenta de autoconhecimento e reflexão simbólica do momento.",
+    duration: "60 min",
+    price: "R$ 160",
+    modality: "Online / Presencial",
+    category: "Individual",
+    therapistId: "guest-maria",
+    icon: "🃏",
+  },
+  {
+    id: "barras-access",
+    title: "Barras de Access",
+    phrase: "Liberar o que está fixo na mente",
+    description: "Técnica de toque suave em 32 pontos da cabeça que libera cargas eletromagnéticas acumuladas — crenças e emoções armazenadas.",
+    duration: "70 min",
+    price: "R$ 190",
+    modality: "Presencial",
+    category: "Individual",
+    therapistId: "guest-rafael",
+    icon: "⚡",
   },
 ] as const;
 
@@ -95,16 +152,30 @@ export const PROFESSIONALS = [
     id: "carla",
     name: "Carla Schmitt",
     role: "Terapeuta Integrativa e Fundadora",
+    bio: "Há 12 anos dedicada ao caminho terapêutico sutil. Formada em terapia integrativa, regressão, constelação familiar e aromaterapia. Conduz os processos com escuta profunda.",
     specialty: "Desbloqueio Emocional e Energético",
     frequency: "Atendimento Diário",
-    image: null, // Placeholder for now
+    avatar: "CS",
+    image: null,
   },
   {
-    id: "guest1",
-    name: "Terapeuta Convidado",
-    role: "Psicoterapeuta Holístico",
-    specialty: "Constelação Familiar",
-    frequency: "Quinzenal",
+    id: "guest-maria",
+    name: "Maria Oliveira",
+    role: "Taróloga e Terapeuta Holística",
+    bio: "Especialista em tarot terapêutico com abordagem junguiana. Usa as cartas como ferramenta de autoconhecimento e reflexão — nunca como previsão de futuro.",
+    specialty: "Tarot e Simbolismo",
+    frequency: "Convidada",
+    avatar: "MO",
+    image: null,
+  },
+  {
+    id: "guest-rafael",
+    name: "Rafael Santos",
+    role: "Facilitador de Barras de Access",
+    bio: "Facilitador certificado de Access Consciousness. Conduz sessões de Barras com precisão e sensibilidade, ajudando a liberar padrões mentais que limitam a vida.",
+    specialty: "Barras de Access",
+    frequency: "Convidado",
+    avatar: "RS",
     image: null,
   },
 ];
@@ -180,6 +251,18 @@ export const PROCESS_STEPS = [
 
 export const FAQ_QUESTIONS = [
   {
+    question: "O que é a clínica Além da Pele?",
+    answer: "A Além da Pele é uma clínica de terapias integrativas localizada em Passo Fundo - RS, fundada pela terapeuta Carla Schmitt. Oferecemos um espaço seguro de cuidado, presença e transformação pessoal."
+  },
+  {
+    question: "Onde fica a clínica Além da Pele e quem é Carla Schmitt?",
+    answer: "A clínica está localizada na R. Álvares Cabral, 408 - Petrópolis, Passo Fundo, Rio Grande do Sul. Carla Schmitt é a terapeuta integrativa fundadora do espaço, especializada em desbloqueio emocional e energético, constelação familiar e barras de access."
+  },
+  {
+    question: "Quais terapias são oferecidas na Além da Pele?",
+    answer: "Nossa clínica oferece Desbloqueio Emocional, Investigação Energética, Regressão Terapêutica, Massagem Terapêutica, Mandalas Vibracionais e Aromaterapia."
+  },
+  {
     question: "Preciso acreditar em alguma religião para que faça sentido?",
     answer: "Não. Você só precisa estar aberto ao processo. Trabalhamos fundamentados nas memórias do próprio corpo e processos energéticos universais que acontecem no seu campo vibratório."
   },
@@ -189,6 +272,6 @@ export const FAQ_QUESTIONS = [
   },
   {
     question: "Os encontros profundos também funcionam em meio online?",
-    answer: "Sim. A física da energia e a ressonância não possuem parede. O impacto, acolhimento e liberação emocional no formato online é tão imersivo quanto estar no nosso espaço térreo em Passo Fundo."
+    answer: "Sim. A física da energia e a ressonância não possuem parede. O impacto, acolhimento e liberação emocional no formato online é tão imersivo quanto estar no nosso espaço em Passo Fundo."
   }
 ];

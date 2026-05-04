@@ -4,7 +4,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AdminGuard() {
-  const { session, loading, isAdmin } = useAuth();
+  const { session, loading, role } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -19,12 +19,12 @@ export function AdminGuard() {
     return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (!isAdmin) {
+  if (!role) {
     return (
       <div className="container py-10 flex flex-col items-center justify-center min-h-[50vh] text-center">
         <h1 className="font-display text-3xl font-semibold text-destructive">Acesso restrito</h1>
         <p className="mt-3 max-w-prose text-foreground/80">
-          Sua conta está autenticada, mas ainda não tem permissão de administrador.
+          Sua conta está autenticada, mas ainda não tem uma função (role) atribuída no sistema.
         </p>
         <div className="mt-6 flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">

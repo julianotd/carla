@@ -11,9 +11,7 @@ import {
 import { MOCK_APPOINTMENTS, MOCK_SERVICES, MOCK_THERAPISTS, MOCK_TIMEOFF } from "./mockData";
 import { addMinutes, areIntervalsOverlapping, differenceInMinutes, format, isAfter, isBefore, parseISO, startOfDay, addDays, isSameDay } from "date-fns";
 
-// In-memory store (initialized with mocks)
-let appointmentsStore = [...MOCK_APPOINTMENTS];
-let timeOffStore = [...MOCK_TIMEOFF];
+import { supabase } from "@/integrations/supabase/client";
 
 // --- Helpers ---
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -22,17 +20,15 @@ const checkOverlap = (
     start: string,
     end: string,
     therapistId: string,
-    excludeAppointmentId?: string
+    appointments: Appointment[],
+    timeOff: TimeOff[]
 ) => {
     const startDate = parseISO(start);
     const endDate = parseISO(end);
 
-    // Check Appointments
-    const hasAptConflict = appointmentsStore.some(apt => {
+    const hasAptConflict = appointments.some(apt => {
         if (apt.therapist_id !== therapistId) return false;
         if (apt.status === "cancelled") return false;
-        if (excludeAppointmentId && apt.id === excludeAppointmentId) return false;
-
         return areIntervalsOverlapping(
             { start: startDate, end: endDate },
             { start: parseISO(apt.start_at), end: parseISO(apt.end_at) }
@@ -41,10 +37,8 @@ const checkOverlap = (
 
     if (hasAptConflict) return true;
 
-    // Check TimeOff
-    const hasTimeOffConflict = timeOffStore.some(to => {
+    const hasTimeOffConflict = timeOff.some(to => {
         if (to.therapist_id !== therapistId) return false;
-
         return areIntervalsOverlapping(
             { start: startDate, end: endDate },
             { start: parseISO(to.start_at), end: parseISO(to.end_at) }
@@ -56,197 +50,249 @@ const checkOverlap = (
 
 // --- API Methods ---
 
+export async function getTherapistByUserId(userId: string): Promise<Therapist | null> {
+    const { data, error } = await supabase
+        .from("therapists")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+    
+    if (error) throw error;
+    return data as Therapist | null;
+}
+
 export async function listTherapists(): Promise<Therapist[]> {
-    await delay(300);
-    return MOCK_THERAPISTS;
+    const { data, error } = await supabase
+        .from("therapists")
+        .select("*")
+        .order("name");
+    
+    if (error) throw error;
+    return data as Therapist[];
 }
 
 export async function listServices(): Promise<Service[]> {
-    await delay(300);
-    return MOCK_SERVICES;
+    const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+    
+    if (error) throw error;
+    return data as Service[];
 }
 
 export async function listAppointments(params: ListAppointmentsParams): Promise<Appointment[]> {
-    await delay(400);
+    let query = supabase
+        .from("appointments")
+        .select("*")
+        .gte("starts_at", params.from)
+        .lte("starts_at", params.to);
 
-    return appointmentsStore.filter(apt => {
-        // Range filter
-        const aptStart = parseISO(apt.start_at);
-        const rangeStart = parseISO(params.from);
-        const rangeEnd = parseISO(params.to);
+    if (params.therapist_ids && params.therapist_ids.length > 0) {
+        query = query.in("therapist_id", params.therapist_ids);
+    }
+    if (params.service_id) {
+        query = query.eq("service_id", params.service_id);
+    }
+    if (params.status) {
+        query = query.eq("status", params.status);
+    }
+    if (params.search_patient) {
+        query = query.ilike("client_name", `%${params.search_patient}%`);
+    }
 
-        if (isBefore(aptStart, rangeStart) || isAfter(aptStart, rangeEnd)) return false;
-
-        // Filters
-        if (params.therapist_ids && !params.therapist_ids.includes(apt.therapist_id)) return false;
-        if (params.service_id && apt.service_id !== params.service_id) return false;
-        if (params.status && apt.status !== params.status) return false;
-        if (params.search_patient && !apt.patient_name.toLowerCase().includes(params.search_patient.toLowerCase())) return false;
-
-        return true;
-    });
+    const { data, error } = await query.order("starts_at", { ascending: true });
+    
+    if (error) throw error;
+    
+    return (data || []).map(item => ({
+        id: item.id,
+        therapist_id: item.therapist_id || "",
+        patient_name: item.client_name,
+        client_phone: item.client_phone,
+        service_id: item.service_id || "",
+        start_at: item.starts_at,
+        end_at: item.ends_at,
+        status: item.status as AppointmentStatus,
+        mode: "in_person", // Default for now
+        created_by_role: "admin", // Default for now
+        notes_internal: item.notes || "",
+        created_at: item.created_at,
+        updated_at: item.updated_at
+    }));
 }
 
 export async function listTimeOff(params: RangeQuery & { therapist_ids?: string[] }): Promise<TimeOff[]> {
-    await delay(300);
+    let query = supabase
+        .from("availability_exceptions")
+        .select("*")
+        .eq("is_available", false) // Exceptions that block time
+        .gte("date", params.from.split('T')[0])
+        .lte("date", params.to.split('T')[0]);
 
-    return timeOffStore.filter(to => {
-        const toStart = parseISO(to.start_at);
-        const rangeStart = parseISO(params.from);
-        const rangeEnd = parseISO(params.to);
+    if (params.therapist_ids && params.therapist_ids.length > 0) {
+        query = query.in("therapist_id", params.therapist_ids);
+    }
 
-        if (isBefore(toStart, rangeStart) || isAfter(toStart, rangeEnd)) return false;
-        if (params.therapist_ids && !params.therapist_ids.includes(to.therapist_id)) return false;
-
-        return true;
-    });
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    return (data || []).map(item => ({
+        id: item.id,
+        therapist_id: item.therapist_id,
+        start_at: `${item.date}T${item.start_time || "00:00:00"}`,
+        end_at: `${item.date}T${item.end_time || "23:59:59"}`,
+        reason: item.reason || "Indisponível"
+    }));
 }
 
 export async function createAppointment(payload: Omit<Appointment, "id" | "created_at" | "updated_at">): Promise<Appointment> {
-    await delay(600);
+    const { data, error } = await supabase
+        .from("appointments")
+        .insert({
+            therapist_id: payload.therapist_id,
+            service_id: payload.service_id,
+            client_name: payload.patient_name,
+            client_phone: payload.client_phone,
+            starts_at: payload.start_at,
+            ends_at: payload.end_at,
+            status: payload.status,
+            notes: payload.notes_internal
+        })
+        .select()
+        .single();
 
-    if (checkOverlap(payload.start_at, payload.end_at, payload.therapist_id)) {
-        throw new Error("CONFLICT: Horário indisponível.");
-    }
+    if (error) throw error;
 
-    const newApt: Appointment = {
+    return {
         ...payload,
-        id: `apt_${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-    };
-
-    appointmentsStore.push(newApt);
-    return newApt;
+        id: data.id,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+    } as Appointment;
 }
 
 export async function updateAppointment(id: string, patch: Partial<Appointment>): Promise<Appointment> {
-    await delay(500);
+    const { data, error } = await supabase
+        .from("appointments")
+        .update({
+            therapist_id: patch.therapist_id,
+            service_id: patch.service_id,
+            client_name: patch.patient_name,
+            client_phone: patch.client_phone,
+            starts_at: patch.start_at,
+            ends_at: patch.end_at,
+            status: patch.status,
+            notes: patch.notes_internal
+        })
+        .eq("id", id)
+        .select()
+        .single();
 
-    const idx = appointmentsStore.findIndex(a => a.id === id);
-    if (idx === -1) throw new Error("Attendance not found");
+    if (error) throw error;
 
-    const current = appointmentsStore[idx];
-    const updated = { ...current, ...patch, updated_at: new Date().toISOString() };
-
-    // Check overlap only if time changed
-    if (
-        (patch.start_at && patch.start_at !== current.start_at) ||
-        (patch.end_at && patch.end_at !== current.end_at) ||
-        (patch.therapist_id && patch.therapist_id !== current.therapist_id)
-    ) {
-        if (checkOverlap(updated.start_at, updated.end_at, updated.therapist_id, id)) {
-            throw new Error("CONFLICT: Novo horário indisponível.");
-        }
-    }
-
-    appointmentsStore[idx] = updated;
-    return updated;
+    return {
+        ...data,
+        patient_name: data.client_name,
+        start_at: data.starts_at,
+        end_at: data.ends_at,
+        notes_internal: data.notes
+    } as unknown as Appointment;
 }
 
 export async function createTimeOff(payload: Omit<TimeOff, "id">): Promise<TimeOff> {
-    await delay(400);
+    const { data, error } = await supabase
+        .from("availability_exceptions")
+        .insert({
+            therapist_id: payload.therapist_id,
+            date: payload.start_at.split('T')[0],
+            start_time: payload.start_at.split('T')[1]?.substring(0, 8),
+            end_time: payload.end_at.split('T')[1]?.substring(0, 8),
+            is_available: false,
+            reason: payload.reason
+        })
+        .select()
+        .single();
 
-    if (checkOverlap(payload.start_at, payload.end_at, payload.therapist_id)) {
-        throw new Error("CONFLICT: Já existe um agendamento neste horário.");
-    }
+    if (error) throw error;
 
-    const newTO: TimeOff = {
-        ...payload,
-        id: `to_${Date.now()}`,
-    };
-
-    timeOffStore.push(newTO);
-    return newTO;
+    return {
+        id: data.id,
+        therapist_id: data.therapist_id,
+        start_at: payload.start_at,
+        end_at: payload.end_at,
+        reason: data.reason
+    } as TimeOff;
 }
 
 // --- Best Slots Logic ---
 
 export async function getBestSlots(params: BestSlotsParams): Promise<BestSlot[]> {
-    await delay(800); // Simulate heavier calculation
+    // 1. Fetch Necessary Data
+    const [therapists, services, appointments, timeOff] = await Promise.all([
+        listTherapists(),
+        listServices(),
+        listAppointments({ from: params.from, to: params.to }),
+        listTimeOff({ from: params.from, to: params.to })
+    ]);
 
-    const service = MOCK_SERVICES.find(s => s.id === params.service_id);
+    const service = services.find(s => s.id === params.service_id);
     if (!service) throw new Error("Service not found");
 
-    const duration = service.duration_min;
+    const duration = service.duration_min || 60;
     const candidates: BestSlot[] = [];
 
-    // Identify therapists to check
     const therapistsToCheck = params.therapist_id
-        ? MOCK_THERAPISTS.filter(t => t.id === params.therapist_id)
-        : MOCK_THERAPISTS;
+        ? therapists.filter(t => t.id === params.therapist_id)
+        : therapists;
 
     const startRange = parseISO(params.from);
     const endRange = parseISO(params.to);
 
-    // Iterate days in range (simplified: just search every 30 mins)
     let cursor = new Date(startRange);
-    // Normalize cursor to start of hour if needed
     if (cursor.getMinutes() % 30 !== 0) {
         cursor = addMinutes(cursor, 30 - (cursor.getMinutes() % 30));
     }
 
-    // Limit iterations to avoid infinite loop in huge ranges
     let safetyCount = 0;
     while (isBefore(cursor, endRange) && safetyCount < 1000) {
         safetyCount++;
-
-        // Define slot time
         const slotStart = cursor;
         const slotEnd = addMinutes(cursor, duration);
         const slotStartIso = slotStart.toISOString();
         const slotEndIso = slotEnd.toISOString();
 
-        // Skip night/early morning (Business Hours: 08:00 - 20:00)
+        // Business Hours: 08:00 - 20:00 (Can be expanded later with availability_rules)
         const hour = slotStart.getHours();
         if (hour < 8 || hour >= 20) {
             cursor = addMinutes(cursor, 30);
             continue;
         }
 
-        // Check each therapist
         for (const therapist of therapistsToCheck) {
-            const isBlocked = checkOverlap(slotStartIso, slotEndIso, therapist.id);
+            const isBlocked = checkOverlap(slotStartIso, slotEndIso, therapist.id, appointments, timeOff);
 
             if (!isBlocked) {
                 let score = 0;
                 let reason: BestSlot["reason"] = "best_fit";
 
-                // Scoring Logic
-
-                // 1. Earliest (High Value)
-                // If it's today/tomorrow and early in the list
                 if (candidates.length < 3) {
                     score += 100;
                     reason = "earliest";
                 }
 
-                // 2. Avoid Gap (Gap < 60 min to another appt)
-                // Find adjacent appointments
-                const hasAdjacent = appointmentsStore.some(apt => {
+                // Gap score
+                const hasAdjacent = appointments.some(apt => {
                     if (apt.therapist_id !== therapist.id || apt.status === 'cancelled') return false;
-                    const aptEnd = parseISO(apt.end_at);
-                    const aptStart = parseISO(apt.start_at);
-
-                    // Gap before
-                    const gapBefore = differenceInMinutes(slotStart, aptEnd);
-                    // Gap after
-                    const gapAfter = differenceInMinutes(aptStart, slotEnd);
-
+                    const gapBefore = differenceInMinutes(slotStart, parseISO(apt.end_at));
+                    const gapAfter = differenceInMinutes(parseISO(apt.start_at), slotEnd);
                     return (gapBefore >= 0 && gapBefore <= 30) || (gapAfter >= 0 && gapAfter <= 30);
                 });
 
                 if (hasAdjacent) {
-                    score += 50; // Boost
-                    reason = "best_fit";
-                }
-
-                // 3. Alternate Therapist
-                // If we looked for ANY therapist, but this one is not the "preferred" (mock logic)
-                // In this case, just giving a small bonus to spread load could be a strategy,
-                // but here we basically value availability.
-                if (!params.therapist_id) {
-                    score += 10;
+                    score += 50;
                 }
 
                 candidates.push({
@@ -258,11 +304,9 @@ export async function getBestSlots(params: BestSlotsParams): Promise<BestSlot[]>
                 });
             }
         }
-
         cursor = addMinutes(cursor, 30);
     }
 
-    // Sort by Score Desc, then Date Asc
     candidates.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return new Date(a.start_at).getTime() - new Date(b.start_at).getTime();

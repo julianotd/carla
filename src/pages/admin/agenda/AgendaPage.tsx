@@ -14,11 +14,11 @@ import { Appointment, Therapist, TimeOff } from "@/lib/agenda/types";
 import { listAppointments, listTherapists, listTimeOff } from "@/lib/agenda/api";
 import { cn } from "@/lib/utils";
 
-import { useNavigate } from "react-router-dom"; // Add import
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function AgendaPage() {
     const navigate = useNavigate();
-    const role: "admin" | "secretary" | "therapist" = "admin"; // TODO: Get from AuthContext
+    const { role } = useAuth();
 
     useEffect(() => {
         if (role === "therapist") {

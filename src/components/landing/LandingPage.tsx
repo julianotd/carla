@@ -28,6 +28,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useLandingData } from "@/hooks/useLandingData";
 import { PortalHero } from "./PortalHero";
+import { TherapistCard } from "../services/TherapistCard";
+import { TherapistCardCompact } from "../services/TherapistCardCompact";
 
 // --- Animations ---
 const fadeInUp = {
@@ -56,13 +58,37 @@ export function LandingPage() {
     events,
     processSteps,
     faqs,
+    loading,
+    hero,
+    aboutSection,
+    therapistsSection,
+    eventsSection,
+    faqSection,
+    contactSection,
   } = useLandingData();
+
+  const [serviceFilter, setServiceFilter] = useState("all");
+
+  const filteredServices = useMemo(() => {
+    if (serviceFilter === "all") return services;
+    if (serviceFilter === "convidados") return services.filter((s: any) => s.therapistId !== "carla");
+    return services.filter((s: any) => s.therapistId === serviceFilter);
+  }, [services, serviceFilter]);
+
+  const handleTherapistLink = (slug: string) => {
+    setServiceFilter(slug);
+    document.getElementById("servicos")?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div id="topo" className="min-h-screen bg-mystic-black text-[#EAE6DF] scroll-smooth font-sans selection:bg-energy-gold/30">
       <main>
         {/* 1. HERO SECTION (PORTAL) */}
-        <PortalHero />
+        <PortalHero 
+          title={hero.title}
+          subtitle={hero.subtitle}
+          cta={hero.cta}
+        />
 
         {/* 2. O QUE É ESSE ESPAÇO? */}
         <section id="conceito" className="relative py-24 sm:py-32 overflow-hidden bg-gradient-to-b from-mystic-black to-mystic-deep">
@@ -84,17 +110,63 @@ export function LandingPage() {
             </div>
             
             <h2 className="font-display text-2xl sm:text-4xl text-energy-gold font-light italic mb-8 leading-relaxed">
-              Este não é apenas um espaço terapêutico.
+              {aboutSection.title}
             </h2>
-            <p className="text-xl sm:text-2xl leading-relaxed text-[#EAE6DF]/90 font-light max-w-2xl mx-auto">
-              É um campo onde processos se revelam, <br className="hidden sm:block" />
-              emoções ganham voz <br className="hidden sm:block" />
-              e a energia encontra caminho.
+            <p className="text-xl sm:text-2xl leading-relaxed text-[#EAE6DF]/90 font-light max-w-2xl mx-auto whitespace-pre-line">
+              {aboutSection.description}
             </p>
           </motion.div>
         </section>
 
-        {/* 3. COMO VOCÊ PODE SER ATENDIDO (EXPERIENCES GRID) */}
+        {/* 3. QUEM CONDUZ (THERAPISTS) */}
+        <section id="profissionais" className="py-24 sm:py-32 bg-mystic-black border-y border-white/5">
+          <div className="container max-w-6xl relative z-10">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="max-w-xl mb-16"
+            >
+              <motion.span variants={fadeInUp} className="font-mono text-[11px] tracking-[0.2em] uppercase text-energy-gold mb-4 block">
+                {therapistsSection.label}
+              </motion.span>
+              <motion.h2 variants={fadeInUp} className="font-display text-4xl sm:text-5xl mb-6 text-[#EAE6DF]">
+                {therapistsSection.title}
+              </motion.h2>
+              <motion.p variants={fadeInUp} className="text-lg text-[#EAE6DF]/60 leading-relaxed italic">
+                {therapistsSection.description}
+              </motion.p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Carla — card principal, em destaque */}
+              <div className="lg:row-span-2 h-full">
+                {professionals && professionals.length > 0 && (
+                  <TherapistCard
+                    therapist={professionals[0]}
+                    services={services}
+                    onFilterClick={handleTherapistLink}
+                  />
+                )}
+              </div>
+
+              {/* Convidados — cards compactos */}
+              <div className="flex flex-col gap-6">
+                {professionals?.slice(1).map((t: any) => (
+                  <TherapistCardCompact
+                    key={t.slug}
+                    therapist={t}
+                    services={services}
+                    onFilterClick={handleTherapistLink}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. COMO VOCÊ PODE SER ATENDIDO (SERVICES GRID WITH FILTERS) */}
         <section id="servicos" className="py-24 bg-mystic-deep relative">
           <div className="container relative z-10 max-w-6xl">
             <motion.div
@@ -102,56 +174,159 @@ export function LandingPage() {
               whileInView="visible"
               viewport={{ once: true }}
               variants={staggerContainer}
-              className="mb-16 text-center"
+              className="mb-12 text-center"
             >
-              <motion.h2 variants={fadeInUp} className="font-display text-4xl text-[#EAE6DF] mb-4">
+              <motion.span variants={fadeInUp} className="text-energy-gold text-xs font-semibold tracking-[0.2em] uppercase mb-4 block">
+                Nossos Caminhos
+              </motion.span>
+              <motion.h2 variants={fadeInUp} className="font-display text-4xl sm:text-5xl text-[#EAE6DF] mb-4">
                 Como você pode ser atendido
               </motion.h2>
-              <motion.p variants={fadeInUp} className="text-[#EAE6DF]/60 text-lg">
-                Selecione o acesso que mais ressoa com o seu momento.
+              <motion.p variants={fadeInUp} className="text-[#EAE6DF]/60 text-lg max-w-2xl mx-auto">
+                Cada caminho é único. Escolha o acesso que mais ressoa com o seu momento atual.
               </motion.p>
             </motion.div>
 
+            {/* Filter Bar */}
+            <div className="mb-12 flex flex-col sm:flex-row items-center justify-between border-b border-white/5 pb-6 gap-6">
+              <div className="flex items-center gap-4 sm:gap-8 flex-wrap justify-center">
+                <button 
+                  onClick={() => setServiceFilter("all")}
+                  className={cn(
+                    "text-xs uppercase tracking-[0.1em] transition-all duration-300 relative py-2",
+                    serviceFilter === "all" ? "text-energy-gold" : "text-[#EAE6DF]/40 hover:text-[#EAE6DF]/70"
+                  )}
+                >
+                  Todos
+                  {serviceFilter === "all" && <motion.div layoutId="filter-active" className="absolute bottom-0 left-0 right-0 h-px bg-energy-gold" />}
+                </button>
+                <button 
+                  onClick={() => setServiceFilter("carla")}
+                  className={cn(
+                    "text-xs uppercase tracking-[0.1em] transition-all duration-300 relative py-2",
+                    serviceFilter === "carla" ? "text-energy-gold" : "text-[#EAE6DF]/40 hover:text-[#EAE6DF]/70"
+                  )}
+                >
+                  Carla Schmitt
+                  {serviceFilter === "carla" && <motion.div layoutId="filter-active" className="absolute bottom-0 left-0 right-0 h-px bg-energy-gold" />}
+                </button>
+                <button 
+                  onClick={() => setServiceFilter("convidados")}
+                  className={cn(
+                    "text-xs uppercase tracking-[0.1em] transition-all duration-300 relative py-2",
+                    serviceFilter === "convidados" ? "text-energy-gold" : "text-[#EAE6DF]/40 hover:text-[#EAE6DF]/70"
+                  )}
+                >
+                  Convidados
+                  {serviceFilter === "convidados" && <motion.div layoutId="filter-active" className="absolute bottom-0 left-0 right-0 h-px bg-energy-gold" />}
+                </button>
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#EAE6DF]/30">
+                {filteredServices.length} serviços disponíveis
+              </div>
+            </div>
+
             <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
+              layout
               className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
             >
-              {services.map((service: any, idx) => (
-                <motion.div key={idx} variants={fadeInUp}>
-                  <div 
-                    onClick={() => window.open(links.whatsapp, '_blank', 'noopener,noreferrer')}
-                    className="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_-20px_rgba(200,169,106,0.3)] hover:border-energy-gold/30 h-full flex flex-col justify-between cursor-pointer"
+              {filteredServices.map((service: any, idx) => {
+                const therapist = professionals.find((p: any) => p.id === service.therapistId) || professionals[0];
+                return (
+                  <motion.div 
+                    layout
+                    key={service.id || idx} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.5 }}
                   >
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-mystic-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
-                    
-                    <div className="relative z-10">
-                      <div className="flex justify-between items-start mb-6">
-                        <h3 className="font-display text-2xl font-normal group-hover:text-energy-gold transition-colors">
-                          {service.title}
-                        </h3>
-                      </div>
-                      <p className="text-[#EAE6DF]/70 mb-8 font-light leading-relaxed">
-                        {service.description}
-                      </p>
-                    </div>
+                    <div className={cn(
+                      "group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-20px_rgba(200,169,106,0.3)] hover:border-energy-gold/30 h-full flex flex-col cursor-default",
+                      service.featured && "border-energy-gold/20 bg-gradient-to-br from-white/5 to-energy-gold/[0.03]"
+                    )}>
+                      {/* Therapist Badge if Guest */}
+                      {service.therapistId !== "carla" && (
+                        <div className="absolute top-4 right-4 bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] uppercase tracking-widest text-[#EAE6DF]/40">
+                          Convidado
+                        </div>
+                      )}
 
-                    <div className="relative z-10 mt-auto pt-4 border-t border-white/10">
-                      <p className="text-sm font-medium text-energy-gold/90 h-10 flex items-center transition-all duration-300 transform translate-y-2 opacity-60 group-hover:translate-y-0 group-hover:opacity-100 italic">
-                        {service.hoverText || "Agende uma sessão."}
-                      </p>
+                      {/* Icon */}
+                      <div className="w-12 h-12 rounded-full bg-energy-gold/10 border border-energy-gold/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-500">
+                        {service.icon || "✨"}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-energy-gold/80 mb-2 block font-medium">
+                          {service.title}
+                        </span>
+                        <h3 className="font-display text-2xl mb-3 italic text-[#EAE6DF]">
+                          {service.phrase || service.title}
+                        </h3>
+                        <p className="text-[#EAE6DF]/60 text-sm font-light leading-relaxed mb-6 line-clamp-3">
+                          {service.description}
+                        </p>
+                      </div>
+
+                      {/* Therapist Signature */}
+                      <div className="flex items-center gap-3 py-4 mb-6 border-t border-white/5">
+                        <div className="w-8 h-8 rounded-full bg-energy-gold/20 border border-energy-gold/30 flex items-center justify-center text-[10px] text-energy-gold font-bold overflow-hidden">
+                          {therapist.image ? (
+                            <img src={therapist.image} alt={therapist.name} className="w-full h-full object-cover" />
+                          ) : (
+                            therapist.avatar || "CS"
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-medium text-[#EAE6DF]/80">{therapist.name}</span>
+                          <span className="text-[9px] uppercase tracking-wider text-[#EAE6DF]/30">Terapeuta Responsável</span>
+                        </div>
+                      </div>
+
+                      {/* Meta Info */}
+                      <div className="flex flex-wrap gap-2 mb-8">
+                        {service.duration && (
+                          <div className="text-[10px] bg-white/5 border border-white/5 px-3 py-1.5 rounded-full text-[#EAE6DF]/50">
+                            ⏱ {service.duration}
+                          </div>
+                        )}
+                        {service.modality && (
+                          <div className="text-[10px] bg-white/5 border border-white/5 px-3 py-1.5 rounded-full text-[#EAE6DF]/50">
+                            {service.modality}
+                          </div>
+                        )}
+                        {service.price && (
+                          <div className="text-[10px] bg-white/5 border border-white/5 px-3 py-1.5 rounded-full text-[#EAE6DF]/50 font-medium text-energy-gold/80">
+                            {service.price}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* CTA */}
+                      <div className="flex gap-3 mt-auto">
+                        <Button 
+                          onClick={() => window.open(links.whatsapp, '_blank')}
+                          className="flex-1 bg-energy-gold text-mystic-black hover:bg-white border-none rounded-full h-11 text-xs uppercase tracking-widest font-medium transition-all"
+                        >
+                          Agendar →
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="px-6 border-white/10 text-[#EAE6DF]/60 hover:text-energy-gold hover:border-energy-gold/30 rounded-full h-11 text-xs uppercase tracking-widest transition-all"
+                        >
+                          Detalhes
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </motion.div>
           </div>
         </section>
-
-        {/* 4. COMO FUNCIONA O PROCESSO (TIMELINE) */}
+        {/* 5. COMO FUNCIONA O PROCESSO (TIMELINE) */}
         <section id="como-funciona" className="py-24 sm:py-32 bg-gradient-to-b from-mystic-deep to-mystic-black relative overflow-hidden">
           {/* Subtle background glow */}
           <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-energy-gold/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
@@ -190,92 +365,6 @@ export function LandingPage() {
                   </p>
                 </motion.div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 5. QUEM CONDUZ (THERAPIST) */}
-        <section id="profissionais" className="py-24 sm:py-32 bg-mystic-black relative overflow-hidden">
-          <div className="container max-w-6xl relative z-10">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="text-center mb-20 sm:mb-28"
-            >
-              <motion.h2 variants={fadeInUp} className="font-display text-4xl sm:text-5xl mb-6 text-[#EAE6DF]">
-                Quem conduz o campo
-              </motion.h2>
-              <motion.p variants={fadeInUp} className="text-[#EAE6DF]/60 text-lg sm:text-xl font-light mb-12 max-w-2xl mx-auto">
-                Cada atendimento é conduzido com escuta, presença e respeito ao seu momento.
-              </motion.p>
-            </motion.div>
-
-            <div className="flex flex-col gap-24 sm:gap-32">
-              {professionals?.map((pro: any, index: number) => {
-                const isEven = index % 2 === 0;
-                // Organic border radius variations similar to the reference
-                const blobStyle = isEven 
-                  ? { borderRadius: "60% 40% 60% 40% / 40% 60% 40% 60%" }
-                  : { borderRadius: "40% 60% 40% 60% / 60% 40% 60% 40%" };
-
-                return (
-                  <motion.div 
-                    key={pro.id}
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-15%" }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-12 md:gap-20`}
-                  >
-                    {/* Image side */}
-                    <div className="w-full md:w-1/2 flex justify-center">
-                      <div 
-                        className="relative group w-72 h-[22rem] sm:w-[26rem] sm:h-[32rem] overflow-hidden" 
-                        style={blobStyle}
-                      >
-                        <div className="absolute inset-0 bg-energy-gold/10 mix-blend-multiply z-10 transition-opacity duration-700 group-hover:opacity-0 pointer-events-none" />
-                        <div className="w-full h-full transform transition-transform duration-[1.5s] ease-out group-hover:scale-[1.05]">
-                           {pro.image ? (
-                            <img src={pro.image} alt={pro.name} className="w-full h-full object-cover filter contrast-125 saturate-50 group-hover:saturate-100 transition-all duration-[1.5s] ease-out" />
-                          ) : (
-                            <div className="w-full h-full bg-mystic-deep flex items-center justify-center text-energy-gold">
-                              <Users className="w-24 h-24 opacity-50" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Text side */}
-                    <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
-                      <h3 className="font-display text-4xl sm:text-5xl font-medium text-energy-gold mb-3">{pro.name}</h3>
-                      <div className="flex flex-col items-center md:items-start text-center md:text-left mb-8">
-                        <p className="text-white/50 font-sans uppercase tracking-[0.2em] text-xs sm:text-sm">
-                          {pro.role}
-                        </p>
-                        {pro.socialUrl && (
-                          <a href={pro.socialUrl} target="_blank" rel="noreferrer" className="mt-3 text-[#EAE6DF]/50 hover:text-energy-gold transition-colors flex items-center gap-2 text-sm">
-                            <Instagram className="w-4 h-4" /> Perfil Social
-                          </a>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-8 flex flex-col items-center md:items-start">
-                        <p className="text-[#EAE6DF]/90 text-lg sm:text-xl font-light leading-relaxed border-l-2 border-energy-gold/50 pl-6 italic max-w-lg">
-                          "Acredito que a verdadeira cura acontece quando criamos um espaço seguro o suficiente para o seu corpo aceitar soltar."
-                        </p>
-                        <div className="pt-4">
-                          <Button asChild size="lg" className="bg-transparent border border-energy-gold text-energy-gold hover:bg-energy-gold hover:text-mystic-black rounded-full px-8 h-12 transition-all duration-500 font-sans tracking-wide">
-                            <a href={links.whatsapp} target="_blank" rel="noreferrer">Agendar com {pro.name.split(' ')[0]}</a>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
             </div>
           </div>
         </section>

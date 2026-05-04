@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="soft-earth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8ba888" />
+      <stop offset="100%" stop-color="#c4a484" />
+    </linearGradient>
+  </defs>
+  <!-- Background circle with soft shadow effect -->
+  <circle cx="52" cy="52" r="48" fill="#000" opacity="0.05" />
+  <circle cx="50" cy="50" r="48" fill="url(#soft-earth)" />
+  
+  <!-- Stylized leaf/petal shape representing holistic care and growth -->
+  <path d="M50 25 C65 40 65 60 50 75 C35 60 35 40 50 25 Z" fill="white" opacity="0.9" />
+  <path d="M50 35 C60 45 60 55 50 65 C40 55 40 45 50 35 Z" fill="white" />
+  
+  <!-- Subtle reflection for a glassmorphic/premium feel -->
+  <circle cx="35" cy="35" r="10" fill="white" opacity="0.1" />
+</svg>

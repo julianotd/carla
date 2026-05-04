@@ -52,6 +52,7 @@ export function AppointmentDrawer({
 
     // Form State
     const [patientName, setPatientName] = useState("");
+    const [clientPhone, setClientPhone] = useState("");
     const [serviceId, setServiceId] = useState("");
     const [therapistId, setTherapistId] = useState("");
     const [date, setDate] = useState<Date | undefined>(new Date());
@@ -76,6 +77,7 @@ export function AppointmentDrawer({
             if (editAppointment) {
                 // Edit Mode
                 setPatientName(editAppointment.patient_name);
+                setClientPhone(editAppointment.client_phone || "");
                 setServiceId(editAppointment.service_id);
                 setTherapistId(editAppointment.therapist_id);
                 const start = parseISO(editAppointment.start_at);
@@ -87,6 +89,7 @@ export function AppointmentDrawer({
             } else {
                 // Create Mode
                 setPatientName("");
+                setClientPhone("");
                 if (services.length > 0 && !serviceId) setServiceId(services[0].id);
                 setTherapistId(initialTherapistId || (therapists.length > 0 ? therapists[0].id : ""));
                 if (initialDate) {
@@ -136,6 +139,7 @@ export function AppointmentDrawer({
 
             const payload = {
                 patient_name: patientName,
+                client_phone: clientPhone,
                 service_id: serviceId,
                 therapist_id: therapistId,
                 start_at: startDate.toISOString(),
@@ -143,7 +147,7 @@ export function AppointmentDrawer({
                 mode,
                 status,
                 notes_internal: notes,
-                created_by_role: "admin" as const // Mock
+                created_by_role: "admin" as const 
             };
 
             if (editAppointment) {
@@ -191,14 +195,25 @@ export function AppointmentDrawer({
                         />
                     )}
 
-                    <div className="space-y-2">
-                        <Label htmlFor="patient">Paciente</Label>
-                        <Input
-                            id="patient"
-                            placeholder="Nome do paciente"
-                            value={patientName}
-                            onChange={e => setPatientName(e.target.value)}
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="patient">Paciente</Label>
+                            <Input
+                                id="patient"
+                                placeholder="Nome do paciente"
+                                value={patientName}
+                                onChange={e => setPatientName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="phone">WhatsApp / Celular</Label>
+                            <Input
+                                id="phone"
+                                placeholder="(00) 00000-0000"
+                                value={clientPhone}
+                                onChange={e => setClientPhone(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -273,9 +288,9 @@ export function AppointmentDrawer({
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="requested">Pendente (Solicitado)</SelectItem>
+                                <SelectItem value="pending">Pendente (Solicitado)</SelectItem>
                                 <SelectItem value="confirmed">Confirmado</SelectItem>
-                                <SelectItem value="done">Concluído</SelectItem>
+                                <SelectItem value="completed">Concluído</SelectItem>
                                 <SelectItem value="cancelled">Cancelado</SelectItem>
                                 <SelectItem value="no_show">Não Compareceu</SelectItem>
                             </SelectContent>
