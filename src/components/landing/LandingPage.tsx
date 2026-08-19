@@ -10,9 +10,13 @@ import {
   Leaf,
   Image as ImageIcon,
   ChevronDown,
+  ChevronUp,
   Instagram,
   Facebook,
   MessageCircle,
+  Clock,
+  ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
@@ -25,11 +29,21 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useLandingData } from "@/hooks/useLandingData";
 import { PortalHero } from "./PortalHero";
 import { TherapistCard } from "../services/TherapistCard";
 import { TherapistCardCompact } from "../services/TherapistCardCompact";
+import { CrystalCursor } from "@/components/ui/CrystalCursor";
+import { FrequencyPlayer } from "@/components/ui/FrequencyPlayer";
 
 // --- Animations ---
 const fadeInUp = {
@@ -68,6 +82,14 @@ export function LandingPage() {
   } = useLandingData();
 
   const [serviceFilter, setServiceFilter] = useState("all");
+  const [selectedServiceModal, setSelectedServiceModal] = useState<any | null>(null);
+  const [expandedServiceIds, setExpandedServiceIds] = useState<string[]>([]);
+
+  const toggleExpandService = (id: string) => {
+    setExpandedServiceIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const filteredServices = useMemo(() => {
     if (serviceFilter === "all") return services;
@@ -82,6 +104,8 @@ export function LandingPage() {
 
   return (
     <div id="topo" className="min-h-screen bg-mystic-black text-[#EAE6DF] scroll-smooth font-sans selection:bg-energy-gold/30">
+      <CrystalCursor />
+      <FrequencyPlayer />
       <main>
         {/* 1. HERO SECTION (PORTAL) */}
         <PortalHero 
@@ -232,10 +256,14 @@ export function LandingPage() {
             >
               {filteredServices.map((service: any, idx) => {
                 const therapist = professionals.find((p: any) => p.id === service.therapistId) || professionals[0];
+                const serviceId = service.id || `svc-${idx}`;
+                const isExpanded = expandedServiceIds.includes(serviceId);
+                const isLongText = service.description && service.description.length > 110;
+
                 return (
                   <motion.div 
                     layout
-                    key={service.id || idx} 
+                    key={serviceId} 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -265,9 +293,21 @@ export function LandingPage() {
                         <h3 className="font-display text-2xl mb-3 italic text-[#EAE6DF]">
                           {service.phrase || service.title}
                         </h3>
-                        <p className="text-[#EAE6DF]/60 text-sm font-light leading-relaxed mb-6 line-clamp-3">
+                        <p className={cn(
+                          "text-[#EAE6DF]/60 text-sm font-light leading-relaxed mb-2 transition-all duration-300",
+                          !isExpanded && isLongText && "line-clamp-3"
+                        )}>
                           {service.description}
                         </p>
+
+                        {isLongText && (
+                          <button
+                            onClick={() => toggleExpandService(serviceId)}
+                            className="text-xs text-energy-gold/80 hover:text-energy-gold hover:underline font-mono uppercase tracking-wider mb-6 block transition-colors"
+                          >
+                            {isExpanded ? "← Ver menos" : "Ler mais →"}
+                          </button>
+                        )}
                       </div>
 
                       {/* Therapist Signature */}
@@ -314,6 +354,7 @@ export function LandingPage() {
                         </Button>
                         <Button 
                           variant="outline"
+                          onClick={() => setSelectedServiceModal({ ...service, therapist })}
                           className="px-6 border-white/10 text-[#EAE6DF]/60 hover:text-energy-gold hover:border-energy-gold/30 rounded-full h-11 text-xs uppercase tracking-widest transition-all"
                         >
                           Detalhes
@@ -406,16 +447,24 @@ export function LandingPage() {
         </section>
 
         {/* 7. EXPERIÊNCIAS / EVENTOS */}
-        <section id="eventos" className="py-24 bg-mystic-black">
+        <section id="eventos" className="py-24 bg-mystic-black border-t border-white/5">
           <div className="container max-w-5xl">
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeInUp}
-              className="mb-12"
+              className="mb-12 text-center sm:text-left"
             >
-              <h2 className="font-display text-4xl">Comunidade & Rodas</h2>
+              <span className="text-energy-gold text-xs font-semibold tracking-[0.2em] uppercase mb-3 block">
+                Comunidade & Conexão
+              </span>
+              <h2 className="font-display text-4xl sm:text-5xl text-[#EAE6DF] mb-4">
+                Vivências, Rodas & Encontros
+              </h2>
+              <p className="text-[#EAE6DF]/60 text-lg max-w-2xl">
+                Momentos de troca coletiva, meditação e aprofundamento emocional presencialmente em Passo Fundo.
+              </p>
             </motion.div>
 
             {events && events.length > 0 ? (
@@ -429,7 +478,7 @@ export function LandingPage() {
                     className="group flex flex-col md:flex-row items-center gap-6 bg-white/5 border border-white/5 rounded-2xl p-6 hover:border-energy-gold/30 transition-all"
                   >
                     <div className="w-full md:w-48 text-center md:text-left md:border-r border-white/10 shrink-0 pr-6">
-                       <span className="text-sm font-semibold tracking-widest text-energy-gold uppercase mb-1 block">
+                       <span className="text-xs font-semibold tracking-widest text-energy-gold uppercase mb-1 block">
                         Agenda
                       </span>
                       <p className="text-xl font-display text-[#EAE6DF]">{evt.date}</p>
@@ -437,7 +486,7 @@ export function LandingPage() {
                     
                     <div className="flex-1 text-center md:text-left">
                       <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2 justify-center md:justify-start">
-                        <h3 className="font-display text-2xl group-hover:text-energy-gold transition-colors">{evt.title}</h3>
+                        <h3 className="font-display text-2xl group-hover:text-energy-gold transition-colors text-[#EAE6DF]">{evt.title}</h3>
                         <Badge className="bg-energy-gold/20 text-energy-gold border-none font-normal text-xs uppercase tracking-wider w-fit mx-auto md:mx-0">
                           Vivência ativa
                         </Badge>
@@ -446,7 +495,7 @@ export function LandingPage() {
                     </div>
 
                     <div className="shrink-0 mt-4 md:mt-0">
-                      <Button asChild variant="outline" className="border-energy-gold text-energy-gold hover:bg-energy-gold hover:text-mystic-black rounded-full w-full md:w-auto">
+                      <Button asChild variant="outline" className="border-energy-gold text-energy-gold hover:bg-energy-gold hover:text-mystic-black rounded-full w-full md:w-auto text-xs uppercase tracking-wider font-medium">
                          <a href={links.whatsapp} target="_blank" rel="noreferrer">Garantir vaga</a>
                       </Button>
                     </div>
@@ -455,9 +504,34 @@ export function LandingPage() {
               </div>
             ) : (
               <div className="py-12 border border-white/5 rounded-2xl text-center bg-white/5">
-                <p className="text-[#EAE6DF]/50 italic">Nenhum evento em comunidade aberto no momento.</p>
+                <p className="text-[#EAE6DF]/50 italic">Nenhum evento com data aberta no momento.</p>
               </div>
             )}
+
+            {/* Banner de Comunidade permanente */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-10 bg-gradient-to-r from-energy-gold/10 via-white/5 to-white/5 border border-energy-gold/20 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6"
+            >
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-energy-gold block mb-2 font-medium">
+                  💬 Grupo de Avisos & Conexão
+                </span>
+                <h4 className="font-display text-2xl text-[#EAE6DF] mb-2">
+                  Comunidade Além da Pele no WhatsApp
+                </h4>
+                <p className="text-[#EAE6DF]/60 text-sm max-w-xl font-light leading-relaxed">
+                  Receba em primeira mão convites para rodas de conversa, novas turmas de vivências integrativas e conteúdos exclusivos em Passo Fundo.
+                </p>
+              </div>
+              <Button asChild className="bg-energy-gold text-mystic-black hover:bg-white rounded-full px-8 h-12 text-xs uppercase tracking-widest font-semibold shrink-0 transition-all">
+                <a href={links.whatsapp} target="_blank" rel="noreferrer" className="flex items-center gap-2">
+                  Participar <ArrowRight className="w-4 h-4" />
+                </a>
+              </Button>
+            </motion.div>
           </div>
         </section>
 
@@ -518,53 +592,225 @@ export function LandingPage() {
       </main>
 
       {/* 10. RODAPÉ */}
-      <footer id="contato" className="bg-mystic-black border-t border-white/5 pt-16 pb-8">
+      <footer id="contato" className="bg-mystic-black border-t border-white/5 pt-20 pb-10 relative">
         <div className="container max-w-6xl">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16">
-            <div id="local" className="max-w-sm">
-              <div className="flex items-center gap-2 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
+            {/* Coluna 1: Marca e Endereço */}
+            <div id="local">
+              <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-energy-gold" />
                 <span className="font-display text-2xl text-[#EAE6DF]">{brand.name}</span>
               </div>
-              <p className="text-[#EAE6DF]/50 font-light text-sm">
-                {brand.address}
+              <p className="text-[#EAE6DF]/60 text-sm font-light leading-relaxed mb-4">
+                {brand.slogan || "Um espaço de cuidado, presença e transformação."}
               </p>
+              <div className="text-[#EAE6DF]/50 text-xs font-light space-y-1 mb-4">
+                <p className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-energy-gold shrink-0 mt-0.5" />
+                  <span>{brand.address}</span>
+                </p>
+              </div>
+              <a
+                href={links.maps}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-energy-gold hover:underline font-mono uppercase tracking-wider"
+              >
+                Ver no Google Maps <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
             
-            <div className="flex gap-12">
-               <div>
-                 <h4 className="font-medium text-[#EAE6DF] mb-4 text-sm font-sans tracking-wide uppercase">Contato</h4>
-                 <ul className="space-y-3">
-                   <li>
-                     <a href={links.whatsapp} target="_blank" rel="noreferrer" className="text-[#EAE6DF]/60 hover:text-energy-gold text-sm flex items-center gap-2 transition-colors">
-                       <MessageCircle className="w-4 h-4" /> {brand.whatsappDisplay}
-                     </a>
-                   </li>
-                 </ul>
-               </div>
-               <div>
-                 <h4 className="font-medium text-[#EAE6DF] mb-4 text-sm font-sans tracking-wide uppercase">Social</h4>
-                 <ul className="space-y-3">
-                   <li>
-                     <a href={links.instagram} target="_blank" rel="noreferrer" className="text-[#EAE6DF]/60 hover:text-energy-gold text-sm flex items-center gap-2 transition-colors">
-                       <Instagram className="w-4 h-4" /> Instagram
-                     </a>
-                   </li>
-                 </ul>
-               </div>
+            {/* Coluna 2: Navegação Rápida */}
+            <div>
+              <h4 className="font-medium text-[#EAE6DF] mb-4 text-xs font-mono tracking-[0.2em] uppercase text-energy-gold">
+                Navegação
+              </h4>
+              <ul className="space-y-2.5 text-sm font-light">
+                <li>
+                  <a href="#topo" className="text-[#EAE6DF]/60 hover:text-energy-gold transition-colors">Início</a>
+                </li>
+                <li>
+                  <a href="#conceito" className="text-[#EAE6DF]/60 hover:text-energy-gold transition-colors">O Espaço</a>
+                </li>
+                <li>
+                  <a href="#profissionais" className="text-[#EAE6DF]/60 hover:text-energy-gold transition-colors">Terapeutas</a>
+                </li>
+                <li>
+                  <a href="#servicos" className="text-[#EAE6DF]/60 hover:text-energy-gold transition-colors">Serviços & Atendimentos</a>
+                </li>
+                <li>
+                  <a href="#como-funciona" className="text-[#EAE6DF]/60 hover:text-energy-gold transition-colors">Como Funciona</a>
+                </li>
+                <li>
+                  <a href="#eventos" className="text-[#EAE6DF]/60 hover:text-energy-gold transition-colors">Comunidade & Rodas</a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Coluna 3: Atendimento & Horários */}
+            <div>
+              <h4 className="font-medium text-[#EAE6DF] mb-4 text-xs font-mono tracking-[0.2em] uppercase text-energy-gold">
+                Atendimento
+              </h4>
+              <div className="space-y-3 text-sm font-light text-[#EAE6DF]/60">
+                <p className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-energy-gold shrink-0" />
+                  <span>Segunda a sexta, com hora marcada</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-energy-gold shrink-0" />
+                  <span>Presencial em Passo Fundo & Online</span>
+                </p>
+                <div className="pt-2">
+                  <a
+                    href={links.whatsapp}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-energy-gold hover:text-white transition-colors text-sm font-medium"
+                  >
+                    <MessageCircle className="w-4 h-4" /> {brand.whatsappDisplay}
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Coluna 4: Redes & Presença */}
+            <div>
+              <h4 className="font-medium text-[#EAE6DF] mb-4 text-xs font-mono tracking-[0.2em] uppercase text-energy-gold">
+                Conecte-se
+              </h4>
+              <ul className="space-y-3 text-sm font-light">
+                <li>
+                  <a
+                    href={links.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[#EAE6DF]/60 hover:text-energy-gold flex items-center gap-2 transition-colors"
+                  >
+                    <Instagram className="w-4 h-4 text-energy-gold" /> Instagram ({brand.instagramHandle})
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={links.whatsapp}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[#EAE6DF]/60 hover:text-energy-gold flex items-center gap-2 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4 text-energy-gold" /> Canal do WhatsApp
+                  </a>
+                </li>
+              </ul>
+              <div className="mt-6 pt-4 border-t border-white/5">
+                <p className="text-xs text-[#EAE6DF]/40 italic font-display">
+                  "Um refúgio para desacelerar e olhar para o que realmente importa."
+                </p>
+              </div>
             </div>
           </div>
           
-          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-             <p className="text-[#EAE6DF]/40 text-xs">
-               &copy; {new Date().getFullYear()} {brand.name}. Todos os direitos reservados.
-             </p>
-             <p className="font-display italic text-[#EAE6DF]/60 text-lg">
-               Cada processo começa com um passo.
-             </p>
+          <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-[#EAE6DF]/40 text-xs text-center sm:text-left">
+              &copy; {new Date().getFullYear()} {brand.name}. Passo Fundo - RS, Brasil. Todos os direitos reservados.
+            </p>
+            <p className="font-display italic text-[#EAE6DF]/60 text-base">
+              Cada processo começa com um passo.
+            </p>
           </div>
         </div>
       </footer>
+
+      {/* 11. MODAL DE DETALHES DO SERVIÇO */}
+      <Dialog open={!!selectedServiceModal} onOpenChange={(open) => !open && setSelectedServiceModal(null)}>
+        <DialogContent className="max-w-xl bg-[#141414] border-energy-gold/30 text-[#EAE6DF] p-6 sm:p-8 max-h-[90vh] overflow-y-auto rounded-2xl">
+          {selectedServiceModal && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-energy-gold/10 border border-energy-gold/30 flex items-center justify-center text-xl shrink-0">
+                    {selectedServiceModal.icon || "✨"}
+                  </div>
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-energy-gold font-medium block">
+                      {selectedServiceModal.title}
+                    </span>
+                    <span className="text-xs text-[#EAE6DF]/40 uppercase tracking-wider font-mono">Detalhes da Sessão</span>
+                  </div>
+                </div>
+                <DialogTitle className="font-display text-2xl sm:text-3xl font-light text-[#EAE6DF] mt-2 mb-1 text-left italic">
+                  {selectedServiceModal.phrase || selectedServiceModal.title}
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-6 py-4 border-y border-white/10 my-4">
+                <div>
+                  <h4 className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#EAE6DF]/40 mb-2">Sobre este Atendimento</h4>
+                  <p className="text-[#EAE6DF]/80 leading-relaxed text-sm font-light whitespace-pre-line">
+                    {selectedServiceModal.description}
+                  </p>
+                </div>
+
+                {selectedServiceModal.therapist && (
+                  <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full border border-energy-gold/30 overflow-hidden bg-energy-gold/10 flex items-center justify-center font-bold text-energy-gold shrink-0">
+                      {selectedServiceModal.therapist.photo ? (
+                        <img src={selectedServiceModal.therapist.photo} alt={selectedServiceModal.therapist.name} className="w-full h-full object-cover" />
+                      ) : (
+                        selectedServiceModal.therapist.initials || "CS"
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#EAE6DF]/40 block font-mono">Terapeuta Responsável</span>
+                      <p className="font-medium text-[#EAE6DF] text-sm">{selectedServiceModal.therapist.name}</p>
+                      <span className="text-xs text-energy-gold font-mono">{selectedServiceModal.therapist.roleLabel}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-3 gap-3">
+                  {selectedServiceModal.duration && (
+                    <div className="bg-white/5 border border-white/5 p-3 rounded-xl text-center">
+                      <span className="text-[9px] uppercase tracking-wider text-[#EAE6DF]/40 block font-mono">Duração</span>
+                      <span className="text-xs font-medium text-[#EAE6DF]">⏱ {selectedServiceModal.duration}</span>
+                    </div>
+                  )}
+                  {selectedServiceModal.modality && (
+                    <div className="bg-white/5 border border-white/5 p-3 rounded-xl text-center">
+                      <span className="text-[9px] uppercase tracking-wider text-[#EAE6DF]/40 block font-mono">Formato</span>
+                      <span className="text-xs font-medium text-[#EAE6DF]">{selectedServiceModal.modality}</span>
+                    </div>
+                  )}
+                  {selectedServiceModal.price && (
+                    <div className="bg-white/5 border border-white/5 p-3 rounded-xl text-center">
+                      <span className="text-[9px] uppercase tracking-wider text-[#EAE6DF]/40 block font-mono">Valor</span>
+                      <span className="text-xs font-medium text-energy-gold">{selectedServiceModal.price}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedServiceModal(null)}
+                  className="border-white/10 text-[#EAE6DF]/60 hover:text-white rounded-full h-11 uppercase tracking-wider text-xs font-mono"
+                >
+                  Fechar
+                </Button>
+                <Button
+                  onClick={() => {
+                    const msg = encodeURIComponent(`Olá! Gostaria de agendar a sessão de *${selectedServiceModal.title}*.`);
+                    window.open(`https://wa.me/5554999996668?text=${msg}`, '_blank');
+                  }}
+                  className="flex-1 bg-energy-gold text-mystic-black hover:bg-white border-none rounded-full h-11 uppercase tracking-wider text-xs font-medium"
+                >
+                  Agendar pelo WhatsApp →
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 
 import { Outlet } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, ExternalLink } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,16 @@ export function AdminLayout() {
             <div className="flex flex-1 flex-col">
                 <header className="flex items-center justify-between border-b bg-background/70 px-6 py-4 backdrop-blur">
                     <h1 className="font-display text-xl font-semibold text-ink">Área Administrativa</h1>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open("/", "_blank")}
+                            className="hidden sm:flex items-center gap-2 border-energy-gold/30 text-energy-gold hover:bg-energy-gold/10"
+                        >
+                            <ExternalLink className="h-4 w-4" /> Ver Site Ao Vivo
+                        </Button>
                         <ModeToggle />
                         <Button
                         type="button"

@@ -86,7 +86,7 @@ async function fetchTherapists() {
 
 // Add fetchEvents
 async function fetchEvents() {
-  const { data, error } = await supabase.from("events").select("*").eq("is_published", true).order("starts_at", { ascending: true });
+  const { data, error } = await supabase.from("events").select("*").eq("is_active", true).order("starts_at", { ascending: true });
   if (error) return [];
   return data;
 }

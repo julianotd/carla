@@ -121,6 +121,26 @@
     scroll-behavior: smooth;
   }
 
+  /* Barra de rolagem temática de Cristal */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0E0E10;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(200, 169, 106, 0.25);
+    border-radius: 4px;
+    border: 1px solid rgba(200, 169, 106, 0.15);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(200, 169, 106, 0.5);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -138,7 +158,43 @@
     text-wrap: balance;
   }
 
-  /* Hero field (signature moment): soft, spiritual light) */
+  /* Glassmorphism de Cristal */
+  .crystal-card {
+    background: rgba(20, 20, 24, 0.65);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(200, 169, 106, 0.15);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .crystal-glow {
+    box-shadow: 0 0 25px rgba(200, 169, 106, 0.2), 0 0 50px rgba(200, 169, 106, 0.1);
+  }
+
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Animações lentas da Mandala */
+  .mandala-rotate-slow {
+    animation: spin 90s linear infinite;
+  }
+
+  .mandala-rotate-reverse {
+    animation: spin-reverse 120s linear infinite;
+  }
+
+  @keyframes spin-reverse {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
+  /* Hero field (signature moment): soft, spiritual light */
   .hero-field {
     background-image:
       radial-gradient(900px circle at var(--mx, 50%) var(--my, 20%), hsl(var(--gold) / 0.18), transparent 58%),

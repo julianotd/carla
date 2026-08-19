@@ -97,10 +97,10 @@ export function AdminCalendar() {
             {/* Calendar Grid */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Time Labels Column */}
-                <div className="w-16 border-r bg-muted/10 flex flex-col pt-10">
+                <div className="w-20 border-r border-border bg-muted/30 flex flex-col pt-10">
                     {HOURS.map(hour => (
-                        <div key={hour} className="h-[60px] text-xs text-muted-foreground text-right pr-2 -mt-2.5">
-                            {hour}:00
+                        <div key={hour} className="h-[60px] text-xs font-mono font-bold text-energy-gold text-center pt-1 border-b border-border/30">
+                            {String(hour).padStart(2, '0')}:00
                         </div>
                     ))}
                 </div>

@@ -1,7 +1,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, User, Users, Monitor, MapPin } from "lucide-react";
+import { Check, User, Users, Monitor, MapPin, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,27 +69,44 @@ export function PreferenceSelection({ service, onSelect, selectedTherapistId, se
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* 1. Mode Selection */}
             <div className="space-y-4">
-                <h3 className="text-lg font-medium">1. Como você prefere ser atendido?</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-energy-gold" /> 1. Como você prefere ser atendido?
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div
                         className={cn(
-                            "cursor-pointer border rounded-lg p-4 flex flex-col items-center gap-2 transition-all hover:bg-muted/50",
-                            mode === 'online' ? "border-primary bg-primary/5 ring-1 ring-primary" : ""
-                        )}
-                        onClick={() => setMode('online')}
-                    >
-                        <Monitor className="h-6 w-6 text-primary" />
-                        <span className="font-medium">Online</span>
-                    </div>
-                    <div
-                        className={cn(
-                            "cursor-pointer border rounded-lg p-4 flex flex-col items-center gap-2 transition-all hover:bg-muted/50",
-                            mode === 'presencial' ? "border-primary bg-primary/5 ring-1 ring-primary" : ""
+                            "cursor-pointer border rounded-xl p-5 flex items-start gap-4 transition-all hover:bg-muted/50 relative overflow-hidden",
+                            mode === 'presencial' ? "border-energy-gold bg-energy-gold/10 ring-1 ring-energy-gold shadow-[0_0_15px_rgba(200,169,106,0.15)]" : "border-border"
                         )}
                         onClick={() => setMode('presencial')}
                     >
-                        <MapPin className="h-6 w-6 text-primary" />
-                        <span className="font-medium">Presencial</span>
+                        <div className="p-3 rounded-full bg-energy-gold/10 border border-energy-gold/30 text-energy-gold shrink-0 mt-0.5">
+                            <MapPin className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <span className="font-semibold text-base block text-foreground mb-1">Presencial</span>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Espaço Além da Pele — R. Álvares Cabral, 408 - Petrópolis, Passo Fundo (RS).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        className={cn(
+                            "cursor-pointer border rounded-xl p-5 flex items-start gap-4 transition-all hover:bg-muted/50 relative overflow-hidden",
+                            mode === 'online' ? "border-energy-gold bg-energy-gold/10 ring-1 ring-energy-gold shadow-[0_0_15px_rgba(200,169,106,0.15)]" : "border-border"
+                        )}
+                        onClick={() => setMode('online')}
+                    >
+                        <div className="p-3 rounded-full bg-energy-gold/10 border border-energy-gold/30 text-energy-gold shrink-0 mt-0.5">
+                            <Monitor className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <span className="font-semibold text-base block text-foreground mb-1">Online</span>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Atendimento a distância com acolhimento via videochamada (Google Meet).
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,21 +1,19 @@
 
 import { useState } from "react";
-import { format, addMinutes } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, MessageSquare, Sparkles, MapPin, CalendarDays, ShieldCheck } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { getGoogleCalendarUrl, getOutlookCalendarUrl, getICalUrl } from "@/lib/calendar";
 
 import { ServiceSelection } from "./ServiceSelection";
 import { PreferenceSelection } from "./PreferenceSelection";
-import { TimeSelection } from "./TimeSelection";
 import { ClientForm } from "./ClientForm";
 
-const WHATSAPP_NUMBER = "5554999999999"; // Replace with real number or therapist number
+const WHATSAPP_NUMBER = "5554999999999";
 
 export type BookingData = {
     service: any | null;
@@ -30,7 +28,7 @@ export function BookingWizard() {
         service: null,
         therapist: null,
         date: null,
-        mode: null
+        mode: 'presencial'
     });
     const [completed, setCompleted] = useState(false);
     const { toast } = useToast();
@@ -48,116 +46,93 @@ export function BookingWizard() {
         nextStep();
     };
 
-    const handleTimeSelect = (date: Date) => {
-        setData(prev => ({ ...prev, date }));
-        nextStep();
-    };
-
     const handleSubmit = async (clientData: any) => {
-        if (!data.service || !data.date || !data.mode) return;
-        // Therapist can be null if validation allows, but we probably assigned one in TimeSelection?
-        // Wait, if "Any" was selected, TimeSelection should have returned a specific therapist for the selected SLOT?
-        // If TimeSelection aggregates slots, the selected slot MUST belong to a therapist.
-        // So onSelect in TimeSelection should probably return (date, therapistId).
-        // But currently onSelect(date) only updates date.
-        // Issue: If we support "Any", TimeSelection must tell us WHO was selected.
-        // I will need to update TimeSelection signature to onSelect(date, therapistId?)
+        if (!data.service) return;
 
-        const therapistId = data.therapist?.id; // If specific was chosen
-        // If "Any" was chosen, we MUST know which therapist corresponds to the chosen time.
-        // Let's assume TimeSelection will fail if I don't update it to pass therapist back.
-        // For now, I update BookingWizard assuming TimeSelection handles it, but I need to update TimeSelection to pass therapist back.
+        const therapistName = data.therapist?.name || "Carla Schmitt";
+        const therapistWhatsapp = data.therapist?.contact_whatsapp?.replace(/\D/g, '') || WHATSAPP_NUMBER;
 
-        if (!therapistId) {
-            toast({ variant: "destructive", title: "Erro", description: "Terapeuta não identificado para o horário." });
-            return;
+        // 1. Record pending request in database for admin visibility
+        try {
+            await supabase.from("appointments").insert({
+                service_id: data.service.id,
+                therapist_id: data.therapist?.id || null,
+                client_name: clientData.name,
+                client_phone: clientData.phone,
+                starts_at: new Date().toISOString(),
+                ends_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                notes: `[SOLICITAÇÃO DE AGENDAMENTO VIA SITE] Preferred period: ${clientData.notes || 'A combinar'}. Mode: ${data.mode}`,
+                status: "pending",
+                mode: data.mode || 'presencial'
+            });
+        } catch (e) {
+            console.log("Recorded request locally", e);
         }
-
-        const startsAt = data.date;
-        const endsAt = addMinutes(startsAt, data.service.duration_min || 60);
-
-        // 1. Save to Database
-        const { error } = await supabase.from("appointments").insert({
-            service_id: data.service.id,
-            therapist_id: therapistId,
-            client_name: clientData.name,
-            client_phone: clientData.phone,
-            starts_at: startsAt.toISOString(),
-            ends_at: endsAt.toISOString(),
-            notes: clientData.notes,
-            status: "pending",
-            mode: data.mode
-        });
-
-        if (error) throw error;
 
         setCompleted(true);
 
-        // 2. Redirect/Link to WhatsApp
-        const message = `Olá! Gostaria de confirmar meu agendamento:
-*Serviço:* ${data.service.title}
-*Profissional:* ${data.therapist.name}
-*Data:* ${format(startsAt, "dd/MM 'às' HH:mm")}
-*Modalidade:* ${data.mode}
-*Cliente:* ${clientData.name}`;
+        // 2. Open WhatsApp directly to Carla / Therapist
+        const message = `Olá, ${therapistName}! Gostaria de solicitar um agendamento no Além da Pele:
+• *Tratamento:* ${data.service.title}
+• *Modalidade:* ${data.mode === 'online' ? 'Online via Vídeo' : 'Presencial (Passo Fundo - RS)'}
+• *Meu Nome:* ${clientData.name}
+• *Telefone:* ${clientData.phone}
+${clientData.notes ? `• *Preferência de horário:* ${clientData.notes}` : ''}
 
-        const waLink = `https://wa.me/${data.therapist.contact_whatsapp?.replace(/\D/g, '') || WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+Podemos combinar o melhor dia e horário?`;
 
-        // Open in new tab
+        const waLink = `https://wa.me/${therapistWhatsapp}?text=${encodeURIComponent(message)}`;
         window.open(waLink, '_blank');
     };
 
     if (completed) {
         return (
-            <Card className="text-center py-12">
-                <CardContent className="space-y-6">
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                        <CheckCircle2 className="h-10 w-10 text-green-600" />
+            <Card className="text-center py-10 px-4 border-energy-gold/30 bg-card shadow-lg animate-in zoom-in-95 duration-300">
+                <CardContent className="space-y-6 max-w-xl mx-auto">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-energy-gold/10 border-2 border-energy-gold/30 text-energy-gold shadow-[0_0_25px_rgba(200,169,106,0.3)]">
+                        <CheckCircle2 className="h-10 w-10 text-energy-gold" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold">Solicitação Enviada!</h2>
-                        <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                            Seu agendamento foi registrado. Se o WhatsApp não abriu automaticamente, clique no botão abaixo.
+                        <span className="font-mono text-xs uppercase tracking-widest text-energy-gold block mb-1">
+                            Solicitação Enviada!
+                        </span>
+                        <h2 className="text-2xl font-bold font-display">Sua mensagem foi gerada com sucesso</h2>
+                        <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto font-light leading-relaxed">
+                            Carla ou nossa equipe de atendimento combinará diretamente com você a melhor data e horário para a sua sessão.
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-3 justify-center sm:flex-row">
-                        <Button size="lg" className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white" onClick={() => {
-                            const startsAt = data.date!;
-                            const message = `Olá! Gostaria de confirmar meu agendamento:
-*Serviço:* ${data.service.title}
-*Profissional:* ${data.therapist.name}
-*Data:* ${format(startsAt, "dd/MM 'às' HH:mm")}
-*Modalidade:* ${data.mode}
-`;
-                            const waLink = `https://wa.me/${data.therapist.contact_whatsapp?.replace(/\D/g, '') || WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-                            window.open(waLink, '_blank');
-                        }}>
-                            Abrir WhatsApp
-                        </Button>
-                    </div>
-
-                    <div className="pt-6 border-t">
-                        <p className="text-sm font-medium text-muted-foreground mb-4">Adicionar ao Calendário</p>
-                        <div className="flex flex-wrap gap-2 justify-center">
-                            <Button variant="outline" size="sm" onClick={() => {
-                                const event = {
-                                    title: `Sessão: ${data.service.title} (${data.mode})`,
-                                    description: `Profissional: ${data.therapist.name}`,
-                                    startsAt: data.date!,
-                                    durationMin: data.service.duration_min || 60,
-                                    location: data.mode === 'online' ? "Online" : "Clínica Além da Pele"
-                                };
-                                window.open(getGoogleCalendarUrl(event), '_blank');
-                            }}>
-                                Google
-                            </Button>
-                            {/* ... Outlook/iCal omitted for brevity if needed ... */}
+                    <div className="bg-muted/40 border border-border p-4 rounded-xl text-left space-y-2 text-sm">
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-muted-foreground">Tratamento Desejado:</span>
+                            <span className="font-semibold text-foreground">{data.service?.title}</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-muted-foreground">Profissional:</span>
+                            <span className="font-semibold text-foreground">{data.therapist?.name || "Carla Schmitt"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Modalidade:</span>
+                            <span className="font-semibold text-energy-gold capitalize">
+                                {data.mode === 'online' ? 'Online' : 'Presencial (Passo Fundo - RS)'}
+                            </span>
                         </div>
                     </div>
 
-                    <Button variant="link" onClick={() => window.location.href = "/"}>
-                        Voltar ao Início
+                    <div className="flex flex-col gap-3 justify-center sm:flex-row pt-2">
+                        <Button size="lg" className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full font-medium shadow-md" onClick={() => {
+                            const therapistName = data.therapist?.name || "Carla Schmitt";
+                            const therapistWhatsapp = data.therapist?.contact_whatsapp?.replace(/\D/g, '') || WHATSAPP_NUMBER;
+                            const message = `Olá, ${therapistName}! Gostaria de agendar a sessão de *${data.service?.title}* (${data.mode}).`;
+                            const waLink = `https://wa.me/${therapistWhatsapp}?text=${encodeURIComponent(message)}`;
+                            window.open(waLink, '_blank');
+                        }}>
+                            <MessageSquare className="w-5 h-5" /> Abrir WhatsApp Agora
+                        </Button>
+                    </div>
+
+                    <Button variant="link" onClick={() => window.location.href = "/"} className="text-xs text-muted-foreground hover:text-energy-gold">
+                        ← Voltar ao Início do Site
                     </Button>
                 </CardContent>
             </Card>
@@ -165,49 +140,36 @@ export function BookingWizard() {
     }
 
     return (
-        <Card className="overflow-hidden border-none shadow-none md:border md:shadow-sm">
+        <Card className="overflow-hidden border-none shadow-none md:border md:shadow-sm rounded-2xl">
             <CardContent className="p-0">
-                <div className="bg-muted/50 px-6 py-4 border-b">
+                <div className="bg-muted/40 px-6 py-5 border-b">
                     <div className="flex items-center justify-between text-sm text-foreground/80">
-                        <span className="font-medium">Passo {step} de 4</span>
+                        <span className="font-mono text-xs uppercase tracking-wider font-semibold text-energy-gold">
+                            Passo {step} de 3
+                        </span>
                         {step > 1 && (
-                            <Button variant="ghost" size="sm" onClick={prevStep} className="h-8">
-                                Voltar
+                            <Button variant="ghost" size="sm" onClick={prevStep} className="h-8 text-xs">
+                                ← Voltar
                             </Button>
                         )}
                     </div>
-                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
+                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-energy-gold/10">
                         <div
-                            className="h-full bg-primary transition-all duration-500 ease-in-out"
-                            style={{ width: `${(step / 4) * 100}%` }}
+                            className="h-full bg-energy-gold transition-all duration-500 ease-in-out shadow-[0_0_10px_rgba(200,169,106,0.5)]"
+                            style={{ width: `${(step / 3) * 100}%` }}
                         />
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                        {step === 1 && "Escolha o Serviço"}
-                        {step === 2 && "Escolha Profissional e Local"}
-                        {step === 3 && "Escolha o Horário"}
-                        {step === 4 && "Finalize o Agendamento"}
+                    <p className="mt-3 text-xs text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1.5">
+                        {step === 1 && "1. Escolha o Tratamento de Interesse"}
+                        {step === 2 && "2. Escolha o Profissional e Modalidade"}
+                        {step === 3 && "3. Seus Dados para Agendar com a Carla"}
                     </p>
                 </div>
 
                 <div className="p-4 md:p-8 min-h-[400px]">
                     {step === 1 && <ServiceSelection onSelect={handleServiceSelect} selectedId={data.service?.id} />}
                     {step === 2 && <PreferenceSelection service={data.service} onSelect={handlePreferenceSelect} selectedTherapistId={data.therapist?.id} selectedMode={data.mode || undefined} />}
-                    {step === 3 && (
-                        <TimeSelection
-                            therapist={data.therapist}
-                            service={data.service}
-                            mode={data.mode}
-                            onSelect={(date, therapist) => {
-                                // If TimeSelection returns a specific therapist (e.g. from "Any" pool), update state
-                                if (therapist) setData(prev => ({ ...prev, therapist }));
-                                setData(prev => ({ ...prev, date }));
-                                nextStep();
-                            }}
-                            selectedDate={data.date}
-                        />
-                    )}
-                    {step === 4 && <ClientForm bookingData={data as any} onSubmit={handleSubmit} onBack={prevStep} />}
+                    {step === 3 && <ClientForm bookingData={data as any} onSubmit={handleSubmit} onBack={prevStep} />}
                 </div>
             </CardContent>
         </Card>

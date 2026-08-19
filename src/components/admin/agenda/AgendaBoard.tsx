@@ -64,21 +64,21 @@ export function AgendaBoard({
     };
 
     return (
-        <div className="flex flex-col h-full border rounded-lg bg-white overflow-hidden shadow-sm">
+        <div className="flex flex-col h-full border rounded-xl bg-card text-card-foreground overflow-hidden shadow-sm border-border">
             {/* Header */}
-            <div className="flex border-b divide-x bg-gray-50/50">
-                <div className="w-16 flex-shrink-0 p-2 text-center text-xs font-medium text-muted-foreground border-r bg-white sticky left-0 z-20">
-                    Horário
+            <div className="flex border-b divide-x divide-border bg-muted/40 sticky top-0 z-30 backdrop-blur">
+                <div className="w-20 flex-shrink-0 p-3 text-center text-xs font-bold uppercase tracking-wider text-energy-gold border-r border-border bg-card/80 sticky left-0 z-20 flex items-center justify-center gap-1">
+                    <Clock className="w-3.5 h-3.5" /> Horário
                 </div>
                 {therapists.map(therapist => (
                     <div key={therapist.id} className="flex-1 p-3 text-center min-w-[180px]">
                         <div className="flex flex-col items-center gap-1">
-                            <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm" style={{ backgroundColor: therapist.color || "#ccc" }}>
+                            <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm" style={{ backgroundColor: therapist.color || "#C8A96A" }}>
                                 <AvatarFallback className="text-xs font-bold text-white bg-transparent">
                                     {therapist.name.charAt(0)}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-semibold truncate max-w-full px-2">
+                            <span className="text-sm font-semibold truncate max-w-full px-2 text-foreground">
                                 {therapist.name}
                             </span>
                         </div>
@@ -88,20 +88,26 @@ export function AgendaBoard({
 
             {/* Grid */}
             <div className="flex-1 overflow-y-auto relative custom-scrollbar">
-                <div className="flex divide-x relative" style={{ height: timeSlots.length * SLOT_HEIGHT }}>
+                <div className="flex divide-x divide-border relative" style={{ height: timeSlots.length * SLOT_HEIGHT }}>
 
                     {/* Timeline axis */}
-                    <div className="w-16 flex-shrink-0 bg-gray-50/30 border-r sticky left-0 z-10">
-                        {timeSlots.map((slot, i) => (
-                            <div
-                                key={i}
-                                className="text-[10px] text-muted-foreground text-center border-b border-dashed border-gray-100 flex items-start justify-center pt-1"
-                                style={{ height: SLOT_HEIGHT }}
-                            >
-                                {/* Show label every hour */}
-                                {slot.getMinutes() === 0 ? format(slot, "HH:mm") : null}
-                            </div>
-                        ))}
+                    <div className="w-20 flex-shrink-0 bg-muted/30 border-r border-border sticky left-0 z-10">
+                        {timeSlots.map((slot, i) => {
+                            const isFullHour = slot.getMinutes() === 0;
+                            const timeStr = format(slot, "HH:mm");
+                            return (
+                                <div
+                                    key={i}
+                                    className={cn(
+                                        "text-xs font-mono font-medium text-center border-b border-border/40 flex items-center justify-center px-1 transition-colors",
+                                        isFullHour ? "bg-energy-gold/10 text-energy-gold font-bold" : "text-muted-foreground/70"
+                                    )}
+                                    style={{ height: SLOT_HEIGHT }}
+                                >
+                                    <span>{timeStr}</span>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Current Time Line */}

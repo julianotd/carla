@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InteractiveMandala } from "@/components/ui/InteractiveMandala";
 
 interface Point {
   x: number;
@@ -94,20 +95,28 @@ export function PortalHero({
         <div className="absolute inset-0 spiritual-fog opacity-[0.09] animate-drift mix-blend-overlay" />
       </motion.div>
 
-      {/* 5. THE PORTAL */}
+      {/* 5. THE PORTAL WITH INTERACTIVE MANDALA */}
       <motion.div 
         style={{ y: yPortal }}
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        className="absolute inset-0 flex items-center justify-center pointer-events-auto"
       >
         <div 
-          className="w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] rounded-full animate-pulse-portal"
+          className="relative flex items-center justify-center pointer-events-auto"
           style={{
-            background: "radial-gradient(circle, transparent 15%, rgba(200, 169, 106, 0.4) 45%, transparent 70%)",
-            filter: "blur(60px)",
             transform: "translate(var(--m-portal-x, 0), var(--m-portal-y, 0))",
             transition: "transform 0.4s ease-out"
           }}
-        />
+        >
+          <div 
+            className="absolute w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] rounded-full animate-pulse-portal pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, transparent 15%, rgba(200, 169, 106, 0.35) 45%, transparent 70%)",
+              filter: "blur(60px)",
+            }}
+          />
+          <InteractiveMandala size={480} className="hidden sm:block opacity-65 hover:opacity-100 transition-opacity" />
+          <InteractiveMandala size={300} className="sm:hidden opacity-60" />
+        </div>
       </motion.div>
 
       {/* 4. PARTICLES */}

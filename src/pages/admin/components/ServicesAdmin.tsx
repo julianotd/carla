@@ -1,7 +1,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X, Save, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Save, Image as ImageIcon, ArrowUp, ArrowDown } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -97,6 +97,16 @@ export function ServicesAdmin() {
     setBenefitsList(s.benefits || []);
     setHoverText(s.hover_text || "");
     setIsDialogOpen(true);
+  };
+
+  const handleMoveOrder = async (s: ServiceRow, delta: number) => {
+    const newOrder = Math.max(0, s.sort_order + delta);
+    const { error: updateError } = await supabase.from("services").update({ sort_order: newOrder }).eq("id", s.id);
+    if (updateError) {
+      toast({ variant: "destructive", title: "Erro", description: updateError.message });
+      return;
+    }
+    await qc.invalidateQueries({ queryKey: ["admin", "services"] });
   };
 
   const handleSave = async () => {
@@ -302,10 +312,30 @@ export function ServicesAdmin() {
               <CardDescription className="line-clamp-2 min-h-[40px]">{s.description}</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-2">
-              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-                <span>{s.duration_min} min</span>
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground mb-4">
+                <span>⏱ {s.duration_min} min</span>
                 <span>{s.price_text || "Preço sob consulta"}</span>
-                <span>Pos: {s.sort_order}</span>
+                <div className="flex items-center gap-1 bg-muted px-2 py-1 rounded">
+                  <span>Pos: {s.sort_order}</span>
+                  <div className="flex flex-col gap-0.5 ml-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveOrder(s, -1)}
+                      title="Mover para cima"
+                      className="hover:text-energy-gold"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveOrder(s, 1)}
+                      title="Mover para baixo"
+                      className="hover:text-energy-gold"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="w-full" onClick={() => handleEdit(s)}>

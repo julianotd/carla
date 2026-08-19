@@ -16,8 +16,8 @@ export function AgendaAdmin() {
                     <h2 className="text-2xl font-bold tracking-tight">Agenda Inteligente</h2>
                     <p className="text-muted-foreground">Gerencie agendamentos e regras de disponibilidade.</p>
                 </div>
-                <Button onClick={() => window.open("/agendar", "_blank")}>
-                    Novo Agendamento
+                <Button onClick={() => window.location.href = "/admin/agenda"}>
+                    Novo Agendamento Clínico
                 </Button>
             </div>
 

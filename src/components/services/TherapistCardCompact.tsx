@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Instagram } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Therapist, Service } from "@/data/services";
@@ -13,26 +14,30 @@ export function TherapistCardCompact({
   services,
   onFilterClick,
 }: TherapistCardProps) {
+  const [imgError, setImgError] = useState(false);
   const therapistServices = services.filter(
-    (s) => s.therapistSlug === therapist.slug
+    (s) => s.therapistSlug === therapist.slug || (s as any).therapistId === therapist.id
   );
 
   return (
     <div className="group bg-[#1A1A1A] border border-white/5 rounded-2xl overflow-hidden flex transition-all duration-500 hover:border-energy-gold/30 hover:-translate-y-0.5 min-h-[220px]">
       {/* Photo — lateral */}
-      <div className="relative w-36 shrink-0 overflow-hidden bg-white/5">
-        {therapist.photo ? (
+      <div className="relative w-36 shrink-0 overflow-hidden bg-mystic-deep">
+        {therapist.photo && !imgError ? (
           <img
             src={therapist.photo}
             alt={therapist.name}
             loading="lazy"
-            className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/5 via-energy-gold/[0.04] to-white/5">
-            <span className="font-serif text-xl text-energy-gold/70 font-light">
-              {therapist.initials}
-            </span>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/5 via-energy-gold/[0.06] to-white/5">
+            <div className="w-12 h-12 rounded-full border border-energy-gold/30 flex items-center justify-center bg-mystic-black/60 shadow-[0_0_15px_rgba(200,169,106,0.15)]">
+              <span className="font-serif text-lg text-energy-gold font-light">
+                {therapist.initials}
+              </span>
+            </div>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1A1A1A]/80" />

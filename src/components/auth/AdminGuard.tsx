@@ -19,6 +19,13 @@ export function AdminGuard() {
     return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   }
 
+  // Session Expiration Guard
+  const isExpired = session.expires_at ? session.expires_at * 1000 < Date.now() : false;
+  if (isExpired) {
+    supabase.auth.signOut();
+    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+  }
+
   if (!role) {
     return (
       <div className="container py-10 flex flex-col items-center justify-center min-h-[50vh] text-center">

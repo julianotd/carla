@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Instagram } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Therapist, Service } from "@/data/services";
@@ -13,35 +14,37 @@ export function TherapistCard({
   services,
   onFilterClick,
 }: TherapistCardProps) {
+  const [imgError, setImgError] = useState(false);
   const therapistServices = services.filter(
-    (s) => s.therapistSlug === therapist.slug
+    (s) => s.therapistSlug === therapist.slug || (s as any).therapistId === therapist.id
   );
 
   return (
     <div className="group bg-[#1A1A1A] border border-white/5 rounded-2xl overflow-hidden transition-all duration-500 hover:border-energy-gold/30 hover:-translate-y-1 h-full flex flex-col">
       {/* ── PHOTO AREA ── */}
-      <div className="relative h-96 overflow-hidden shrink-0">
+      <div className="relative h-96 overflow-hidden shrink-0 bg-mystic-deep">
         {/* Photo */}
-        {therapist.photo ? (
+        {therapist.photo && !imgError ? (
           <img
             src={therapist.photo}
             alt={therapist.name}
             loading="lazy"
+            onError={() => setImgError(true)}
             className={cn(
               "w-full h-full object-cover object-top transition-transform duration-700",
-              "group-hover:scale-[1.03]"
+              "group-hover:scale-[1.04]"
             )}
           />
         ) : (
           /* Fallback sofisticado */
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/5 via-energy-gold/[0.04] to-white/5">
-            <div className="w-24 h-24 rounded-full border-2 border-energy-gold/20 flex items-center justify-center mb-4">
-              <span className="font-serif text-3xl text-energy-gold/70 font-light">
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/5 via-energy-gold/[0.06] to-white/5">
+            <div className="w-24 h-24 rounded-full border-2 border-energy-gold/30 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(200,169,106,0.15)] bg-mystic-black/60">
+              <span className="font-serif text-3xl text-energy-gold font-light tracking-widest">
                 {therapist.initials}
               </span>
             </div>
-            <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-[#EAE6DF]/40">
-              Foto em breve
+            <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-energy-gold/60">
+              {therapist.name}
             </span>
           </div>
         )}

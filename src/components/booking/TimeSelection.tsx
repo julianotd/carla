@@ -269,40 +269,118 @@ export function TimeSelection({ therapist, service, mode, onSelect, selectedDate
             </div>
 
             <div className="flex-1">
-                <h3 className="mb-4 font-semibold flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Horários Disponíveis ({slots.length})
+                <h3 className="mb-4 font-semibold flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-energy-gold" />
+                        Horários Disponíveis ({slots.length})
+                    </span>
+                    <Badge variant="outline" className="text-xs font-normal">
+                        ⏱ {service.duration_min || 60} min
+                    </Badge>
                 </h3>
 
-                <ScrollArea className="h-[300px]">
+                <ScrollArea className="h-[360px] pr-2">
                     {slots.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-2">
-                            {slots.map((slot, idx) => (
-                                <Button
-                                    key={`${slot.time}-${slot.therapist.id}-${idx}`}
-                                    variant={selectedDate && format(selectedDate, "HH:mm") === slot.time && isSameDay(selectedDate, date!) ? "default" : "outline"}
-                                    size="sm"
-                                    className="justify-start px-3 h-auto py-2"
-                                    onClick={() => {
-                                        if (date) {
-                                            const [h, m] = slot.time.split(':').map(Number);
-                                            const newDate = new Date(date);
-                                            newDate.setHours(h, m, 0, 0);
-                                            onSelect(newDate, slot.therapist);
-                                        }
-                                    }}
-                                >
-                                    <div className="text-left">
-                                        <div className="font-medium">{slot.time}</div>
-                                        {/* Only show therapist name if "Any" was selected originally */}
-                                        {!therapist && <div className="text-[10px] text-muted-foreground">{slot.therapist.name.split(' ')[0]}</div>}
+                        <div className="space-y-4">
+                            {/* Turno Manhã */}
+                            {slots.some(s => Number(s.time.split(':')[0]) < 12) && (
+                                <div>
+                                    <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 block font-semibold">
+                                        ☀️ Manhã
+                                    </span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {slots.filter(s => Number(s.time.split(':')[0]) < 12).map((slot, idx) => (
+                                            <Button
+                                                key={`m-${slot.time}-${slot.therapist.id}-${idx}`}
+                                                variant={selectedDate && format(selectedDate, "HH:mm") === slot.time && isSameDay(selectedDate, date!) ? "default" : "outline"}
+                                                size="sm"
+                                                className="justify-start px-3 h-auto py-2 border-border hover:border-energy-gold/50"
+                                                onClick={() => {
+                                                    if (date) {
+                                                        const [h, m] = slot.time.split(':').map(Number);
+                                                        const newDate = new Date(date);
+                                                        newDate.setHours(h, m, 0, 0);
+                                                        onSelect(newDate, slot.therapist);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="text-left">
+                                                    <div className="font-medium text-sm">{slot.time}</div>
+                                                    {!therapist && <div className="text-[10px] text-muted-foreground">{slot.therapist.name.split(' ')[0]}</div>}
+                                                </div>
+                                            </Button>
+                                        ))}
                                     </div>
-                                </Button>
-                            ))}
+                                </div>
+                            )}
+
+                            {/* Turno Tarde */}
+                            {slots.some(s => Number(s.time.split(':')[0]) >= 12 && Number(s.time.split(':')[0]) < 18) && (
+                                <div>
+                                    <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 block font-semibold">
+                                        🌤️ Tarde
+                                    </span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {slots.filter(s => Number(s.time.split(':')[0]) >= 12 && Number(s.time.split(':')[0]) < 18).map((slot, idx) => (
+                                            <Button
+                                                key={`t-${slot.time}-${slot.therapist.id}-${idx}`}
+                                                variant={selectedDate && format(selectedDate, "HH:mm") === slot.time && isSameDay(selectedDate, date!) ? "default" : "outline"}
+                                                size="sm"
+                                                className="justify-start px-3 h-auto py-2 border-border hover:border-energy-gold/50"
+                                                onClick={() => {
+                                                    if (date) {
+                                                        const [h, m] = slot.time.split(':').map(Number);
+                                                        const newDate = new Date(date);
+                                                        newDate.setHours(h, m, 0, 0);
+                                                        onSelect(newDate, slot.therapist);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="text-left">
+                                                    <div className="font-medium text-sm">{slot.time}</div>
+                                                    {!therapist && <div className="text-[10px] text-muted-foreground">{slot.therapist.name.split(' ')[0]}</div>}
+                                                </div>
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Turno Noite */}
+                            {slots.some(s => Number(s.time.split(':')[0]) >= 18) && (
+                                <div>
+                                    <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 block font-semibold">
+                                        🌙 Noite
+                                    </span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {slots.filter(s => Number(s.time.split(':')[0]) >= 18).map((slot, idx) => (
+                                            <Button
+                                                key={`n-${slot.time}-${slot.therapist.id}-${idx}`}
+                                                variant={selectedDate && format(selectedDate, "HH:mm") === slot.time && isSameDay(selectedDate, date!) ? "default" : "outline"}
+                                                size="sm"
+                                                className="justify-start px-3 h-auto py-2 border-border hover:border-energy-gold/50"
+                                                onClick={() => {
+                                                    if (date) {
+                                                        const [h, m] = slot.time.split(':').map(Number);
+                                                        const newDate = new Date(date);
+                                                        newDate.setHours(h, m, 0, 0);
+                                                        onSelect(newDate, slot.therapist);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="text-left">
+                                                    <div className="font-medium text-sm">{slot.time}</div>
+                                                    {!therapist && <div className="text-[10px] text-muted-foreground">{slot.therapist.name.split(' ')[0]}</div>}
+                                                </div>
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
-                        <div className="text-center text-muted-foreground p-8">
-                            Nenhum horário para este dia.
+                        <div className="text-center text-muted-foreground p-8 border rounded-lg bg-muted/20">
+                            Nenhum horário disponível para este dia. Selecione outra data no calendário.
                         </div>
                     )}
                 </ScrollArea>
